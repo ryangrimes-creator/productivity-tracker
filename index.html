@@ -32,6 +32,8 @@ async function deleteProject(row) {
     deleteRow: row
   }).toString();
 
+  console.log('Attempting to delete row:', row); 
+  
   try {
     await fetch(`${API_URL}?${query}`);
   } catch (err) {
@@ -116,6 +118,7 @@ async function loadProjects() {
   </script>
 </body>
 </html>
+
 
 
 
