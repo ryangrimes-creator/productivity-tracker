@@ -58,11 +58,15 @@
       };
 
       try {
-        await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        const query = new URLSearchParams({
+          token: TOKEN,
+          Name: name,
+          Priority: priority,
+          Status: status
+        }).toString();
+
+        await fetch(`${API_URL}?${query}`);
+
 
         form.reset();
         loadProjects(); // Refresh list
@@ -76,4 +80,5 @@
   </script>
 </body>
 </html>
+
 
