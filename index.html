@@ -6,9 +6,9 @@
 <body>
   <h2>Home Project Tracker</h2>
   <form id="projectForm">
-    <input type="text" id="name" placeholder="Project Name" required />
-    <input type="number" id="priority" placeholder="Priority (1–5)" required min="1" max="5" />
-    <select id="status">
+    <input type="text" id="name" placeholder="Project Name" autocomplete="off" required />
+    <input type="number" id="priority" placeholder="Priority (1–5)" autocomplete="off" required min="1" max="5" />
+    <select id="status" autocomplete="off">
       <option value="Not Started">Not Started</option>
       <option value="In Progress">In Progress</option>
       <option value="Complete">Complete</option>
@@ -80,5 +80,6 @@
   </script>
 </body>
 </html>
+
 
 
