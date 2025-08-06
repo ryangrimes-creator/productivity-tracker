@@ -25,24 +25,49 @@
     const form = document.getElementById('projectForm');
     const list = document.getElementById('projectList');
 
-    // Load projects from Google Sheets
-    async function loadProjects() {
-      try {
-        const res = await fetch(`${API_URL}?token=${TOKEN}`);
-        const data = await res.json();
-        console.log('Fetched project data:', data);
-        
-        list.innerHTML = '';
-        data.forEach((project) => {
-          const li = document.createElement('li');
-          li.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status})`;
-          list.appendChild(li);
-        });
-      } catch (err) {
-        console.error('Failed to load projects:', err);
-        list.innerHTML = '<li>Error loading projects.</li>';
-      }
-    }
+// ✅ Delete project row from Google Sheets
+async function deleteProject(row) {
+  const query = new URLSearchParams({
+    token: TOKEN,
+    deleteRow: row
+  }).toString();
+
+  try {
+    await fetch(`${API_URL}?${query}`);
+  } catch (err) {
+    console.error('Failed to delete project:', err);
+  }
+}
+
+// ✅ Load projects and render with Delete buttons
+async function loadProjects() {
+  try {
+    const res = await fetch(`${API_URL}?token=${TOKEN}`);
+    const data = await res.json();
+    console.log('Fetched project data:', data);
+
+    list.innerHTML = '';
+    data.forEach((project, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = async () => {
+        await deleteProject(index + 2); // +2 for header and zero-based index
+        loadProjects(); // Reload after deletion
+      };
+
+      li.appendChild(deleteBtn);
+      list.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error('Failed to load projects:', err);
+    list.innerHTML = '<li>Error loading projects.</li>';
+  }
+}
+
 
     // Add project via POST
     form.addEventListener('submit', async function(e) {
@@ -81,6 +106,7 @@
   </script>
 </body>
 </html>
+
 
 
 
