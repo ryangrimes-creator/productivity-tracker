@@ -25,7 +25,7 @@
     const form = document.getElementById('projectForm');
     const list = document.getElementById('projectList');
 
-// ✅ Delete project row from Google Sheets
+// Delete project row from Google Sheets
 async function deleteProject(row) {
   const query = new URLSearchParams({
     token: TOKEN,
@@ -39,7 +39,7 @@ async function deleteProject(row) {
   }
 }
 
-// ✅ Load projects and render with Delete buttons
+// Load projects and render with Delete buttons
 async function loadProjects() {
   try {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
@@ -49,18 +49,28 @@ async function loadProjects() {
     list.innerHTML = '';
     data.forEach((project, index) => {
       const li = document.createElement('li');
-      li.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+     
+      // Add project text
+    const text = document.createTextNode(
+      `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `
+    );
+    li.appendChild(text);
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.onclick = async () => {
-        await deleteProject(index + 2); // +2 for header and zero-based index
-        loadProjects(); // Reload after deletion
-      };
+    // Create Delete Button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.marginLeft = '8px'; // (optional) spacing for clarity
+    deleteBtn.onclick = async () => {
+      await deleteProject(index + 2); // Adjust for headers
+      loadProjects();
+    };
 
-      li.appendChild(deleteBtn);
-      list.appendChild(li);
-    });
+    // Add button to <li>
+    li.appendChild(deleteBtn);
+
+    // Add <li> to the list
+    list.appendChild(li);
+  });
 
   } catch (err) {
     console.error('Failed to load projects:', err);
@@ -106,6 +116,7 @@ async function loadProjects() {
   </script>
 </body>
 </html>
+
 
 
 
