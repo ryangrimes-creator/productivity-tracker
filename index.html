@@ -30,7 +30,8 @@
       try {
         const res = await fetch(`${API_URL}?token=${TOKEN}`);
         const data = await res.json();
-
+        console.log('Fetched project data:', data);
+        
         list.innerHTML = '';
         data.forEach((project) => {
           const li = document.createElement('li');
@@ -80,6 +81,7 @@
   </script>
 </body>
 </html>
+
 
 
 
