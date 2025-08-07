@@ -33,11 +33,28 @@ async function deleteProject(row) {
   }).toString();
 
   console.log('Attempting to delete row:', row); 
-  
+
   try {
     await fetch(`${API_URL}?${query}`);
   } catch (err) {
-    console.error('Failed to delete project:', err);
+    console.error('Failed to update project:', err);
+  }
+}
+
+  // update project in google sheets  
+async function updateProject(row, name, priority, status) {
+  const query = new URLSearchParams({
+    token: TOKEN,
+    updateRow: row,
+    Name: name,
+    Priority: priority,
+    Status: status
+  }).toString();
+
+  try {
+    await fetch(`${API_URL}?${query}`);
+  } catch (err) {
+    console.error('Failed to update project:', err);
   }
 }
 
@@ -51,6 +68,7 @@ async function loadProjects() {
     list.innerHTML = '';
     data.forEach((project, index) => {
       const li = document.createElement('li');
+      const rowIndex = index + 2; // skip header row
      
       // Add project text
     const text = document.createTextNode(
@@ -70,6 +88,16 @@ async function loadProjects() {
     // Add button to <li>
     li.appendChild(deleteBtn);
 
+    // Edit Button
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.style.marginLeft = '8px';
+    editBtn.onclick = () => {
+      renderEditForm(li, project, rowIndex);
+    };
+    // Add button to <li>
+    li.appendChild(editBtn);
+      
     // Add <li> to the list
     list.appendChild(li);
   });
@@ -79,6 +107,40 @@ async function loadProjects() {
     list.innerHTML = '<li>Error loading projects.</li>';
   }
 }
+
+    function renderEditForm(li, project, rowIndex) {
+      li.innerHTML = '';
+
+    const nameInput = document.createElement('input');
+    nameInput.value = project.Name;
+
+    const priorityInput = document.createElement('input');
+    priorityInput.type = 'number';
+    priorityInput.value = project.Priority;
+    priorityInput.min = 1;
+    priorityInput.max = 5;
+
+    const statusSelect = document.createElement('select');
+    ['Not Started', 'In Progress', 'Complete'].forEach(status => {
+      const option = document.createElement('option');
+      option.value = status;
+      option.textContent = status;
+      if (status === project.Status) option.selected = true;
+      statusSelect.appendChild(option);
+    });
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = async () => {
+      await updateProject(rowIndex, nameInput.value, priorityInput.value, statusSelect.value);
+      loadProjects();
+    };
+
+    li.appendChild(nameInput);
+    li.appendChild(priorityInput);
+    li.appendChild(statusSelect);
+    li.appendChild(saveBtn);
+  }
 
 
     // Add project via POST
@@ -118,6 +180,7 @@ async function loadProjects() {
   </script>
 </body>
 </html>
+
 
 
 
