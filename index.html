@@ -86,28 +86,23 @@ li.style.padding = '8px';
 li.style.marginBottom = '6px';
 li.style.borderRadius = '4px';
 li.style.listStyle = 'none'; // optional, cleaner bullets
-// Priority-based border color
-let borderColor = '';
-switch (parseInt(project.Priority, 10)) {
-  case 5:
-  case 4:
-    borderColor = '#dc3545'; // red for high priority
-    break;
-  case 3:
-    borderColor = '#ffc107'; // yellow for medium
-    break;
-  case 2:
-  case 1:
-    borderColor = '#28a745'; // green for low
-    break;
-  default:
-    borderColor = '#6c757d'; // gray fallback
-}
 
-li.style.border = `2px solid ${borderColor}`;
-li.style.padding = '8px';
-li.style.marginBottom = '6px';
-li.style.borderRadius = '4px';
+// Priority-based accent (normalize first)
+const priorityRaw = String(project.Priority ?? '');
+const priority = Number(priorityRaw.trim());
+console.log('priority raw:', `[${priorityRaw}]`, '→ parsed:', priority);
+
+// Pick a bold accent color
+let accent = '#6c757d'; // default gray
+if (priority >= 4) accent = '#dc3545';       // high (red)
+else if (priority === 3) accent = '#ffc107'; // medium (yellow)
+else if (priority > 0) accent = '#28a745';   // low (green)
+
+// Make it obvious: thick left border + outline
+li.style.borderLeft = `8px solid ${accent}`;
+li.style.outline = `2px solid ${accent}20`;   // translucent outline for contrast
+li.style.boxShadow = `0 1px 3px 0 #00000022`;
+
 
       
       // Add project text
@@ -220,6 +215,7 @@ li.style.borderRadius = '4px';
   </script>
 </body>
 </html>
+
 
 
 
