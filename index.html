@@ -70,25 +70,23 @@ async function loadProjects() {
       const li = document.createElement('li');
       const rowIndex = index + 2; // skip header row
 
-  // Add background color based on status
-let bgColor = '';
-switch (project.Status) {
-  case 'Complete':
-    bgColor = '#d4edda'; // light green
-    break;
-  case 'In Progress':
-    bgColor = '#fff3cd'; // light yellow
-    break;
-  case 'Not Started':
-    bgColor = '#f8d7da'; // light red
-    break;
-  default:
-    bgColor = '#ffffff'; // fallback white
-}
-li.style.backgroundColor = bgColor;
+// Add background color based on status (normalize first)
+const statusRaw = String(project.Status || '');
+console.log('status raw:', `[${statusRaw}]`); // debug
+const status = statusRaw.trim().toLowerCase();
+
+const colors = {
+  'complete': '#d4edda',      // light green
+  'in progress': '#fff3cd',   // light yellow
+  'not started': '#f8d7da'    // light red
+};
+
+li.style.backgroundColor = colors[status] || '#ffffff';
 li.style.padding = '8px';
 li.style.marginBottom = '6px';
 li.style.borderRadius = '4px';
+li.style.listStyle = 'none'; // optional, cleaner bullets
+
       
       // Add project text
     const text = document.createTextNode(
@@ -200,6 +198,7 @@ li.style.borderRadius = '4px';
   </script>
 </body>
 </html>
+
 
 
 
