@@ -64,12 +64,32 @@ async function loadProjects() {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
     const data = await res.json();
     console.log('Fetched project data:', data);
-
+    
     list.innerHTML = '';
     data.forEach((project, index) => {
       const li = document.createElement('li');
       const rowIndex = index + 2; // skip header row
-     
+
+  // Add background color based on status
+let bgColor = '';
+switch (project.Status) {
+  case 'Complete':
+    bgColor = '#d4edda'; // light green
+    break;
+  case 'In Progress':
+    bgColor = '#fff3cd'; // light yellow
+    break;
+  case 'Not Started':
+    bgColor = '#f8d7da'; // light red
+    break;
+  default:
+    bgColor = '#ffffff'; // fallback white
+}
+li.style.backgroundColor = bgColor;
+li.style.padding = '8px';
+li.style.marginBottom = '6px';
+li.style.borderRadius = '4px';
+      
       // Add project text
     const text = document.createTextNode(
       `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `
@@ -180,6 +200,7 @@ async function loadProjects() {
   </script>
 </body>
 </html>
+
 
 
 
