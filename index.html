@@ -16,6 +16,7 @@
     <button type="submit">Add Project</button>
   </form>
 
+  <div id="summary" style="margin-top: 10px; font-weight: bold;"></div>div>
   <ul id="projectList"></ul>
 
   <script>
@@ -66,6 +67,16 @@ async function loadProjects() {
     console.log('Fetched project data:', data);
     
     list.innerHTML = '';
+    
+    // Calculate summary stats
+    const total = data.length;
+    const complete = data.filter(p => p.Status === 'Complete').length;
+    const percent = total > 0 ? ((complete / total) * 100).toFixed(1) : 0;
+
+    // Update summary text
+    document.getElementById('summary').textContent =
+      ${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent}%)`;
+      
     data.forEach((project, index) => {
       const li = document.createElement('li');
       const rowIndex = index + 2; // skip header row
@@ -215,6 +226,7 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
   </script>
 </body>
 </html>
+
 
 
 
