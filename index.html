@@ -4,21 +4,21 @@
   <title>Home Project Tracker</title>
 </head>
 <body>
-  <h2>Home Project Tracker</h2>
-  <form id="projectForm">
-    <input type="text" id="name" placeholder="Project Name" autocomplete="off" required />
-    <input type="number" id="priority" placeholder="Priority (1–5)" autocomplete="off" required min="1" max="5" />
-    <select id="status" autocomplete="off">
-      <option value="Not Started">Not Started</option>
-      <option value="In Progress">In Progress</option>
-      <option value="Complete">Complete</option>
-    </select>
-    <button type="submit">Add Project</button>
-  </form>
-
-  <div id="summary" style="margin-top: 10px; font-weight: bold;"></div>
-  <ul id="projectList"></ul>
-
+  <div id="app">
+    <h2>Home Project Tracker</h2>
+    <form id="projectForm">
+      <input type="text" id="name" placeholder="Project Name" autocomplete="off" required />
+      <input type="number" id="priority" placeholder="Priority (1–5)" autocomplete="off" required min="1" max="5" />
+      <select id="status" autocomplete="off">
+        <option value="Not Started">Not Started</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Complete">Complete</option>
+      </select>
+      <button type="submit">Add Project</button>
+    </form>
+    <div id="summary" style="margin-top: 10px; font-weight: bold;"></div>
+    <ul id="projectList"></ul>
+  </div>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzZ6lR1XKvsYj0A6oSK3Z5CQvJkEYYR-eGllQ5sQThOI2QhuzUPt_bOhbFBX_XjyT0R/exec';
     const TOKEN = 'Project1285'; // Use the same token as in your Apps Script
@@ -238,6 +238,7 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
   </script>
 </body>
 </html>
+
 
 
 
