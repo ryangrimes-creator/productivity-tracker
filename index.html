@@ -68,14 +68,26 @@ async function loadProjects() {
     
     list.innerHTML = '';
     
-    // Calculate summary stats
-    const total = data.length;
-    const complete = data.filter(p => p.Status === 'Complete').length;
-    const percent = total > 0 ? ((complete / total) * 100).toFixed(1) : 0;
+// --- Progress summary (robust) ---
+let summaryEl = document.getElementById('summary');
+if (!summaryEl) {
+  // If the div wasn't added, create it and insert above the list
+  summaryEl = document.createElement('div');
+  summaryEl.id = 'summary';
+  summaryEl.style.marginTop = '10px';
+  summaryEl.style.fontWeight = 'bold';
+  list.parentNode.insertBefore(summaryEl, list); // put it above the <ul>
+}
 
-    // Update summary text
-    document.getElementById('summary').textContent =
-      ${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent}%)`;
+const total = data.length;
+const complete = data.filter(
+  p => String(p.Status || '').trim().toLowerCase() === 'complete'
+).length;
+const percent = total > 0 ? ((complete / total) * 100).toFixed(1) : 0;
+
+summaryEl.textContent =
+  `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent}%)`;
+
       
     data.forEach((project, index) => {
       const li = document.createElement('li');
@@ -226,6 +238,7 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
   </script>
 </body>
 </html>
+
 
 
 
