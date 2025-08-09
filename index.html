@@ -86,6 +86,28 @@ li.style.padding = '8px';
 li.style.marginBottom = '6px';
 li.style.borderRadius = '4px';
 li.style.listStyle = 'none'; // optional, cleaner bullets
+// Priority-based border color
+let borderColor = '';
+switch (parseInt(project.Priority, 10)) {
+  case 5:
+  case 4:
+    borderColor = '#dc3545'; // red for high priority
+    break;
+  case 3:
+    borderColor = '#ffc107'; // yellow for medium
+    break;
+  case 2:
+  case 1:
+    borderColor = '#28a745'; // green for low
+    break;
+  default:
+    borderColor = '#6c757d'; // gray fallback
+}
+
+li.style.border = `2px solid ${borderColor}`;
+li.style.padding = '8px';
+li.style.marginBottom = '6px';
+li.style.borderRadius = '4px';
 
       
       // Add project text
@@ -198,6 +220,7 @@ li.style.listStyle = 'none'; // optional, cleaner bullets
   </script>
 </body>
 </html>
+
 
 
 
