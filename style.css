@@ -1,154 +1,133 @@
-<style>
-  :root{
-    --bg:#f7f7fb;
-    --card:#ffffff;
-    --text:#1f2937;
-    --muted:#6b7280;
-    --ring:#2563eb;
-    --good:#22c55e;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-    --shadow:0 10px 25px rgba(0,0,0,.06);
-    --radius:12px;
-    --gap:10px;
-  }
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --ring:#2563eb;
+  --shadow:0 10px 25px rgba(0,0,0,.06);
+  --radius:12px;
+}
 
-  html,body{
-    margin:0;
-    padding:0;
-    background:var(--bg);
-    color:var(--text);
-    font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  }
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
 
-  /* App container */
-  #app{
-    max-width: 760px;
-    margin: 32px auto;
-    padding: 0 16px;
-  }
+#app{
+  max-width: 860px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
 
-  h2{
-    margin: 0 0 14px 0;
-    font-size: 28px;
-    letter-spacing:.2px;
-  }
+/* Title */
+h2{
+  margin: 0 0 14px 0;
+  font-size: 28px;
+  letter-spacing:.2px;
+}
 
-  /* Card that holds form + summary */
-  .card{
-    background:var(--card);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    padding:16px;
-    margin-bottom:16px;
-  }
+/* Form card */
+#projectForm{
+  display:grid;
+  grid-template-columns: 1.3fr .6fr .9fr auto;
+  gap: 10px;
+  align-items:center;
+  background:var(--card);
+  padding:14px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  margin-bottom:12px;
+}
 
-  /* Form layout */
+#projectForm input,
+#projectForm select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+  outline:none;
+  transition:border .15s, box-shadow .15s;
+}
+
+#projectForm input:focus,
+#projectForm select:focus{
+  border-color: var(--ring);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+}
+
+/* Buttons */
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:#111827;
+  color:#fff;
+  transition: transform .06s ease, opacity .15s ease, box-shadow .15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+button:hover{ opacity:.95; }
+button:active{ transform: translateY(1px); }
+li button + button{ margin-left:8px; }
+
+/* Sticky summary */
+#summary{
+  position: sticky;
+  top: 6px;
+  z-index: 5;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin: 10px 0 12px;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+/* List */
+#projectList{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+#projectList li{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  background:var(--card);
+  border-radius: var(--radius);
+  padding:12px;
+  margin-bottom:12px;
+  box-shadow: var(--shadow);
+}
+
+/* Text area inside each item (keeps long names tidy) */
+#projectList li > span,
+#projectList li > div:first-child{
+  flex:1 1 auto;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* Responsive layout */
+@media (max-width:700px){
   #projectForm{
-    display:grid;
-    grid-template-columns: 1.2fr .5fr .8fr auto;
-    gap: var(--gap);
-    align-items:center;
+    grid-template-columns: 1fr 1fr;
   }
-
-  #projectForm input,
-  #projectForm select{
-    width: 100%;
-    padding: 10px 12px;
-    border:1px solid #e5e7eb;
-    border-radius:10px;
-    background:#fff;
-    outline:none;
-    transition:border .15s, box-shadow .15s;
+  #projectForm button{
+    grid-column: 1 / -1;
+    width:100%;
   }
-
-  #projectForm input:focus,
-  #projectForm select:focus{
-    border-color: var(--ring);
-    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
-  }
-
-  /* Buttons */
-  button{
-    padding:10px 14px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    background:#111827;
-    color:#fff;
-    transition: transform .06s ease, opacity .15s ease;
-  }
-  button:hover{ opacity:.92; }
-  button:active{ transform: translateY(1px); }
-
-  /* Secondary buttons (Edit/Delete) inside list */
-  .btn-secondary{
-    background:#374151;
-  }
-  .btn-danger{
-    background:var(--bad);
-  }
-
-  /* Summary (sticky) */
-  #summary{
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    margin-top: 12px;
-    margin-bottom: 12px;
-    box-shadow: var(--shadow);
-    font-weight: 600;
-  }
-
-  /* List */
-  #projectList{
-    list-style:none;
-    padding:0;
-    margin:0;
-  }
-
   #projectList li{
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    gap: 12px;
-    background:var(--card);
-    border-radius: var(--radius);
-    padding:12px;
-    margin-bottom:12px;
-    box-shadow: var(--shadow);
+    flex-direction: column;
+    align-items: flex-start;
   }
+  li button{ width:100%; }
+}
 
-  /* Left side (text) and right side (actions) */
-  .item-left{ flex: 1 1 auto; }
-  .item-actions{
-    display:flex;
-    gap:8px;
-    flex: 0 0 auto;
-  }
-
-  /* Status badges (optional if you want instead of row bg) */
-  .badge{
-    display:inline-block;
-    font-size:12px;
-    padding:3px 8px;
-    border-radius:999px;
-    background:#eef2ff;
-    color:#3730a3;
-    margin-left:8px;
-  }
-
-  /* Responsive form (stack on small screens) */
-  @media (max-width:640px){
-    #projectForm{
-      grid-template-columns: 1fr 1fr;
-    }
-    #projectForm button{
-      grid-column: 1 / -1;
-      width: 100%;
-    }
-  }
-</style>
