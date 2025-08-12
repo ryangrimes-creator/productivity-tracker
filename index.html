@@ -129,11 +129,12 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
 
 
       
-      // Add project text
-    const text = document.createTextNode(
-      `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `
-    );
-    li.appendChild(text);
+      // Add project text (wrapped so it can flex)
+      const text = document.createElement('span');
+      text.className = 'item-left';
+      text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+      li.appendChild(text);
+
 
      // Create Delete Button
     const deleteBtn = document.createElement('button');
@@ -239,6 +240,7 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
   </script>
 </body>
 </html>
+
 
 
 
