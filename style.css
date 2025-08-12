@@ -78,3 +78,45 @@ button {
   background-color: #0056b3;
 }
 
+/* --- Layout polish for list rows --- */
+#projectList li{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  justify-content: space-between;
+  transition: transform .08s ease, box-shadow .15s ease, background-color .2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+#projectList li:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.10);
+}
+
+/* Text column – lets long names truncate nicely */
+.item-left{
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Button polish */
+button{
+  transition: transform .06s ease, opacity .15s ease, box-shadow .15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+button:hover{ opacity: .95; }
+button:active{ transform: translateY(1px); }
+button:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+/* Make Delete / Edit colors pop a bit more (keep your classes) */
+.delete-btn{ background-color:#dc3545; color:#fff; }
+.delete-btn:hover{ background-color:#b02a37; }
+.edit-btn{ background-color:#007bff; color:#fff; }
+.edit-btn:hover{ background-color:#0062cc; }
+
