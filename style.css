@@ -51,30 +51,48 @@ form input, form select, form button {
   justify-content: space-between;
 }
 
-/* Buttons */
+/* General button polish */
 button {
   padding: 4px 10px;
   font-size: 13px;
   cursor: pointer;
   border: none;
   border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  transition: background-color 0.25s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover {
+  opacity: 0.95;
+  transform: scale(1.05); /* pop effect */
+}
+
+button:active {
+  transform: scale(0.95); /* press effect */
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
 
 /* Delete Button */
-.delete-btn {
+button.delete-btn {
   background-color: #dc3545;
   color: white;
 }
-.delete-btn:hover {
+button.delete-btn:hover {
+  background-color: #c82333;
+}
+button.delete-btn:active {
   background-color: #a71d2a;
 }
 
 /* Edit Button */
-.edit-btn {
+button.edit-btn {
   background-color: #007bff;
   color: white;
 }
-.edit-btn:hover {
+button.edit-btn:hover {
+  background-color: #0069d9;
+}
+button.edit-btn:active {
   background-color: #0056b3;
 }
 
