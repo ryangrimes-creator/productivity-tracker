@@ -116,7 +116,10 @@ button:hover{
   opacity: 0.95;
   transform: scale(1.05); /* subtle pop effect */
 }
-button:active{ transform: translateY(1px); }
+button:active{ 
+  transform: scale(0.95);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
 button:focus-visible{
   outline: none;
   box-shadow: 0 0 0 3px rgba(37,99,235,.25);
