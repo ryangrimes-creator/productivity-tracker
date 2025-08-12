@@ -183,9 +183,11 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
     // Add project via POST
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const priority = document.getElementById('priority').value;
-      const status = document.getElementById('status').value;
+        const formData = new FormData(form);
+        const name = formData.get('name');
+        const priority = formData.get('priority');
+        const status = formData.get('status');
+
 
       const payload = {
         token: TOKEN,
