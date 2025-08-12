@@ -104,10 +104,18 @@ button {
 
 /* Button polish */
 button{
-  transition: transform .06s ease, opacity .15s ease, box-shadow .15s ease;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  transition: background-color 0.25s ease, transform 0.15s ease, opacity 0.15s ease;
 }
-button:hover{ opacity: .95; }
+button:hover{ 
+  opacity: 0.95;
+  transform: scale(1.05); /* subtle pop effect */
+}
 button:active{ transform: translateY(1px); }
 button:focus-visible{
   outline: none;
