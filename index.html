@@ -135,24 +135,24 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
     );
     li.appendChild(text);
 
-    // Create Delete Button
+     // Create Delete Button
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
-    deleteBtn.style.marginLeft = '8px'; // (optional) spacing for clarity
+    deleteBtn.classList.add('delete-btn'); // NEW
     deleteBtn.onclick = async () => {
-      await deleteProject(index + 2); // Adjust for headers
-      loadProjects();
+    await deleteProject(index + 2); // Adjust for headers
+    loadProjects();
     };
 
     // Add button to <li>
     li.appendChild(deleteBtn);
 
-    // Edit Button
+    // Create Edit Button
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
-    editBtn.style.marginLeft = '8px';
+    editBtn.classList.add('edit-btn'); // NEW
     editBtn.onclick = () => {
-      renderEditForm(li, project, rowIndex);
+    renderEditForm(li, project, rowIndex);
     };
     // Add button to <li>
     li.appendChild(editBtn);
@@ -239,6 +239,7 @@ li.style.boxShadow = `0 1px 3px 0 #00000022`;
   </script>
 </body>
 </html>
+
 
 
 
