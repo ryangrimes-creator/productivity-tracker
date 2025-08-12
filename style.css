@@ -1,133 +1,81 @@
-:root{
-  --bg:#f6f7fb;
-  --card:#ffffff;
-  --text:#111827;
-  --muted:#6b7280;
-  --ring:#2563eb;
-  --shadow:0 10px 25px rgba(0,0,0,.06);
-  --radius:12px;
+:/* General Page Styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
-html,body{
-  margin:0;
-  padding:0;
-  background:var(--bg);
-  color:var(--text);
-  font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+/* App Container */
+#app {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-#app{
-  max-width: 860px;
-  margin: 28px auto;
-  padding: 0 16px;
+/* Header */
+h2 {
+  margin-bottom: 10px;
 }
 
-/* Title */
-h2{
-  margin: 0 0 14px 0;
-  font-size: 28px;
-  letter-spacing:.2px;
-}
-
-/* Form card */
-#projectForm{
-  display:grid;
-  grid-template-columns: 1.3fr .6fr .9fr auto;
+/* Form Styling */
+form {
+  display: flex;
   gap: 10px;
-  align-items:center;
-  background:var(--card);
-  padding:14px;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  margin-bottom:12px;
+  flex-wrap: wrap;
 }
 
-#projectForm input,
-#projectForm select{
-  width:100%;
-  padding:10px 12px;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  background:#fff;
-  outline:none;
-  transition:border .15s, box-shadow .15s;
+form input, form select, form button {
+  padding: 6px 10px;
+  font-size: 14px;
 }
 
-#projectForm input:focus,
-#projectForm select:focus{
-  border-color: var(--ring);
-  box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+/* Summary Text */
+#summary {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* Project List */
+#projectList {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+#projectList li {
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* Buttons */
-button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  background:#111827;
-  color:#fff;
-  transition: transform .06s ease, opacity .15s ease, box-shadow .15s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-button:hover{ opacity:.95; }
-button:active{ transform: translateY(1px); }
-li button + button{ margin-left:8px; }
-
-/* Sticky summary */
-#summary{
-  position: sticky;
-  top: 6px;
-  z-index: 5;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin: 10px 0 12px;
-  box-shadow: var(--shadow);
-  font-weight: 600;
+button {
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
 }
 
-/* List */
-#projectList{
-  list-style:none;
-  padding:0;
-  margin:0;
-}
-#projectList li{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 12px;
-  background:var(--card);
-  border-radius: var(--radius);
-  padding:12px;
-  margin-bottom:12px;
-  box-shadow: var(--shadow);
+/* Delete Button */
+button.delete-btn {
+  background-color: #dc3545;
+  color: white;
 }
 
-/* Text area inside each item (keeps long names tidy) */
-#projectList li > span,
-#projectList li > div:first-child{
-  flex:1 1 auto;
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+button.delete-btn:hover {
+  background-color: #a71d2a;
 }
 
-/* Responsive layout */
-@media (max-width:700px){
-  #projectForm{
-    grid-template-columns: 1fr 1fr;
-  }
-  #projectForm button{
-    grid-column: 1 / -1;
-    width:100%;
-  }
-  #projectList li{
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  li button{ width:100%; }
+/* Edit Button */
+button.edit-btn {
+  background-color: #007bff;
+  color: white;
 }
 
+button.edit-btn:hover {
+  background-color: #0056b3;
+}
