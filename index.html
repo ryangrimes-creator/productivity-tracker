@@ -40,14 +40,36 @@
       <button type="submit">Add Project</button>
     </form>
     <div id="summary" style="margin-top: 10px; font-weight: bold;"></div>
+    <!-- Filter / Sort Toolbar -->
+    <div id="toolbar" class="card toolbar">
+      <input id="searchInput" type="text" placeholder="Search projects…" aria-label="Search projects">
+
+      <select id="statusFilter" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option value="Not Started">Not Started</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Complete">Complete</option>
+      </select>
+
+      <select id="sortBy" aria-label="Sort projects">
+        <option value="priority-desc">Priority: High → Low</option>
+        <option value="priority-asc">Priority: Low → High</option>
+        <option value="status">Status</option>
+        <option value="name">Name (A–Z)</option>
+      </select>
+
+      <button id="clearFiltersBtn" type="button" class="edit-btn">Clear filters</button>
+    </div>
     <button id="clearAllBtn" class="delete-btn" type="button" style="margin:8px 0;">
         Clear All Projects
     </button>
+    
     <ul id="projectList"></ul>
   </div>
  <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
