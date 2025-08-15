@@ -143,6 +143,35 @@ button:focus-visible{
   box-shadow: 0 0 0 3px rgba(37,99,235,.25);
 }
 
+/* Toolbar */
+#toolbar{
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 0.8fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--card, #fff);
+  padding: 10px;
+  border-radius: var(--radius, 10px);
+  box-shadow: var(--shadow, 0 2px 6px rgba(0,0,0,.06));
+  margin-bottom: 12px;
+}
+
+#toolbar input, #toolbar select{
+  padding: 10px 12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  outline:none;
+}
+
+@media (max-width: 700px){
+  #toolbar{
+    grid-template-columns: 1fr 1fr;
+  }
+  #toolbar button{
+    grid-column: 1 / -1;
+  }
+}
+
 /* Make Delete / Edit colors pop a bit more (keep your classes) */
 .delete-btn{ background-color:#dc3545; color:#fff; }
 .delete-btn:hover{ background-color:#b02a37; }
