@@ -188,5 +188,27 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
+// Clear all projects (keeps header row)
+async function clearAllProjects() {
+  const ok = window.confirm('This will delete ALL projects from the sheet. Continue?');
+  if (!ok) return;
+
+  const query = new URLSearchParams({
+    token: TOKEN,
+    clearAll: '1'
+  }).toString();
+
+  try {
+    await fetch(`${API_URL}?${query}`);
+    loadProjects();
+  } catch (err) {
+    console.error('Failed to clear all projects:', err);
+    alert('Failed to clear all projects. Check console for details.');
+  }
+}
+
+// Wire up the button
+document.getElementById('clearAllBtn')?.addEventListener('click', clearAllProjects);
+
 // ===== Initial load =====
 loadProjects();
