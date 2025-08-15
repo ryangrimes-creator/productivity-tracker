@@ -7,6 +7,15 @@ const form = document.getElementById('projectForm');
 const list = document.getElementById('projectList');
 const summaryEl = document.getElementById('summary');
 
+// ===== Filter/Sort State =====
+let allProjects = []; // master copy from server
+
+// Controls
+const searchInput    = document.getElementById('searchInput');
+const statusFilter   = document.getElementById('statusFilter');
+const sortBySelect   = document.getElementById('sortBy');
+const clearFiltersBtn= document.getElementById('clearFiltersBtn');
+
 // ===== Backend helpers =====
 async function deleteProject(row) {
   const query = new URLSearchParams({ token: TOKEN, deleteRow: row }).toString();
@@ -30,6 +39,24 @@ async function loadProjects() {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
     const data = await res.json();
 
+    // Save a master copy
+    allProjects = Array.isArray(data) ? data : [];
+
+    // Summary
+    const total = allProjects.length;
+    const complete = allProjects.filter(
+      p => String(p.Status || '').trim().toLowerCase() === 'complete'
+    ).length;
+    const percent = total > 0 ? ((complete / total) * 100).toFixed(1) : 0;
+    summaryEl.textContent = `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent}%)`;
+
+    // Render current view
+    applyFiltersAndRender();
+  } catch (err) {
+    console.error('Failed to load projects:', err);
+    list.innerHTML = '<li>Error loading projects.</li>';
+  }
+}
     // Summary
     const total = data.length;
     const complete = data.filter(
