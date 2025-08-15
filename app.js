@@ -10,11 +10,11 @@ const summaryEl = document.getElementById('summary');
 // ===== Filter/Sort State =====
 let allProjects = []; // master copy from server
 
-// Controls
-const searchInput    = document.getElementById('searchInput');
-const statusFilter   = document.getElementById('statusFilter');
-const sortBySelect   = document.getElementById('sortBy');
-const clearFiltersBtn= document.getElementById('clearFiltersBtn');
+// Controls (toolbar)
+const searchInput     = document.getElementById('searchInput');
+const statusFilter    = document.getElementById('statusFilter');
+const sortBySelect    = document.getElementById('sortBy');
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
 // ===== Backend helpers =====
 async function deleteProject(row) {
@@ -33,13 +33,115 @@ async function updateProject(row, name, priority, status) {
   await fetch(`${API_URL}?${query}`);
 }
 
-// ===== UI - load & render =====
+// ===== Render a given list of projects (3C) =====
+function renderList(projects) {
+  list.innerHTML = '';
+
+  projects.forEach((project) => {
+    // Map back to real sheet row (based on the master array)
+    const rowIndex = allProjects.indexOf(project) + 2; // +2 for header row
+
+    const li = document.createElement('li');
+
+    // --- status background ---
+    const status = String(project.Status || '').trim().toLowerCase();
+    const colors = {
+      'complete': '#d4edda',
+      'in progress': '#fff3cd',
+      'not started': '#f8d7da'
+    };
+    li.style.backgroundColor = colors[status] || '#ffffff';
+    li.style.padding = '8px';
+    li.style.marginBottom = '6px';
+    li.style.borderRadius = '4px';
+    li.style.listStyle = 'none';
+
+    // --- priority accent ---
+    const priorityNum = Number(String(project.Priority ?? '').trim());
+    let accent = '#6c757d';
+    if (priorityNum >= 4) accent = '#dc3545';
+    else if (priorityNum === 3) accent = '#ffc107';
+    else if (priorityNum > 0) accent = '#28a745';
+    li.style.borderLeft = `8px solid ${accent}`;
+    li.style.outline = `2px solid ${accent}20`;
+    li.style.boxShadow = `0 1px 3px 0 #00000022`;
+
+    // Text
+    const text = document.createElement('span');
+    text.className = 'item-left';
+    text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+    li.appendChild(text);
+
+    // Actions
+    const actions = document.createElement('div');
+    actions.className = 'item-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.classList.add('edit-btn');
+    editBtn.type = 'button';
+    editBtn.onclick = () => renderEditForm(li, project, rowIndex);
+    actions.appendChild(editBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.classList.add('delete-btn');
+    deleteBtn.type = 'button';
+    deleteBtn.onclick = async () => {
+      await deleteProject(rowIndex);
+      loadProjects();
+    };
+    actions.appendChild(deleteBtn);
+
+    li.appendChild(actions);
+    list.appendChild(li);
+  });
+}
+
+// ===== Filter/sort and render current view (3D) =====
+function applyFiltersAndRender() {
+  const q = String(searchInput?.value || '').trim().toLowerCase();
+  const statusSelected = String(statusFilter?.value || '');
+  const sortBy = String(sortBySelect?.value || 'priority-desc');
+
+  // 1) Filter
+  let view = allProjects.filter(p => {
+    const name = String(p.Name || '').toLowerCase();
+    const matchesText = q ? name.includes(q) : true;
+    const matchesStatus = statusSelected
+      ? String(p.Status || '') === statusSelected
+      : true;
+    return matchesText && matchesStatus;
+  });
+
+  // 2) Sort
+  const statusOrder = { 'Not Started': 0, 'In Progress': 1, 'Complete': 2 };
+  view.sort((a, b) => {
+    switch (sortBy) {
+      case 'priority-asc':
+        return Number(a.Priority) - Number(b.Priority);
+      case 'status':
+        return (statusOrder[a.Status] ?? 99) - (statusOrder[b.Status] ?? 99)
+            || String(a.Name || '').localeCompare(String(b.Name || ''));
+      case 'name':
+        return String(a.Name || '').localeCompare(String(b.Name || ''));
+      case 'priority-desc':
+      default:
+        return Number(b.Priority) - Number(a.Priority);
+    }
+  });
+
+  // 3) Render
+  renderList(view);
+}
+
+// ===== UI - load & summary =====
 async function loadProjects() {
   try {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
     const data = await res.json();
 
-    // Save a master copy
+    // Save master copy
     allProjects = Array.isArray(data) ? data : [];
 
     // Summary
@@ -57,81 +159,6 @@ async function loadProjects() {
     list.innerHTML = '<li>Error loading projects.</li>';
   }
 }
-    // Summary
-    const total = data.length;
-    const complete = data.filter(
-      p => String(p.Status || '').trim().toLowerCase() === 'complete'
-    ).length;
-    const percent = total > 0 ? ((complete / total) * 100).toFixed(1) : 0;
-    summaryEl.textContent = `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent}%)`;
-
-    // List
-    list.innerHTML = '';
-    data.forEach((project, index) => {
-      const li = document.createElement('li');
-      const rowIndex = index + 2; // sheet row (skip header)
-
-      // --- status background ---
-      const status = String(project.Status || '').trim().toLowerCase();
-      const colors = {
-        'complete': '#d4edda',
-        'in progress': '#fff3cd',
-        'not started': '#f8d7da'
-      };
-      li.style.backgroundColor = colors[status] || '#ffffff';
-      li.style.padding = '8px';
-      li.style.marginBottom = '6px';
-      li.style.borderRadius = '4px';
-      li.style.listStyle = 'none';
-
-      // --- priority accent ---
-      const priorityNum = Number(String(project.Priority ?? '').trim());
-      let accent = '#6c757d';
-      if (priorityNum >= 4) accent = '#dc3545';
-      else if (priorityNum === 3) accent = '#ffc107';
-      else if (priorityNum > 0) accent = '#28a745';
-      li.style.borderLeft = `8px solid ${accent}`;
-      li.style.outline = `2px solid ${accent}20`;
-      li.style.boxShadow = `0 1px 3px 0 #00000022`;
-
-      // Left text (wrap in span for layout)
-      const text = document.createElement('span');
-      text.className = 'item-left';
-      text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
-      li.appendChild(text);
-
-      // Actions container
-      const actions = document.createElement('div');
-      actions.className = 'item-actions';
-
-      // Edit
-      const editBtn = document.createElement('button');
-      editBtn.textContent = 'Edit';
-      editBtn.classList.add('edit-btn');
-      editBtn.type = 'button';
-      editBtn.onclick = () => renderEditForm(li, project, rowIndex);
-      actions.appendChild(editBtn);
-
-      // Delete
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.classList.add('delete-btn');
-      deleteBtn.type = 'button';
-      deleteBtn.onclick = async () => {
-        await deleteProject(rowIndex);
-        loadProjects();
-      };
-      actions.appendChild(deleteBtn);
-
-      li.appendChild(actions);
-      list.appendChild(li);
-    });
-
-  } catch (err) {
-    console.error('Failed to load projects:', err);
-    list.innerHTML = '<li>Error loading projects.</li>';
-  }
-}
 
 // ===== UI - inline edit =====
 function renderEditForm(li, project, rowIndex) {
@@ -142,7 +169,7 @@ function renderEditForm(li, project, rowIndex) {
   nameInput.type = 'text';
   nameInput.value = project.Name;
   nameInput.id = `edit-name-${rowIndex}`;
-  nameInput.name = 'edit-name';          // add name to clear the warning
+  nameInput.name = 'edit-name';
   nameInput.setAttribute('aria-label', 'Project name');
   nameInput.style.marginRight = '6px';
 
@@ -153,14 +180,14 @@ function renderEditForm(li, project, rowIndex) {
   priorityInput.min = 1;
   priorityInput.max = 5;
   priorityInput.id = `edit-priority-${rowIndex}`;
-  priorityInput.name = 'edit-priority';  // add name
+  priorityInput.name = 'edit-priority';
   priorityInput.setAttribute('aria-label', 'Priority (1–5)');
   priorityInput.style.marginRight = '6px';
 
   // Status
   const statusSelect = document.createElement('select');
   statusSelect.id = `edit-status-${rowIndex}`;
-  statusSelect.name = 'edit-status';     // add name
+  statusSelect.name = 'edit-status';
   statusSelect.setAttribute('aria-label', 'Status');
   ['Not Started', 'In Progress', 'Complete'].forEach(status => {
     const option = document.createElement('option');
@@ -215,16 +242,12 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// Clear all projects (keeps header row)
+// ===== Clear all projects =====
 async function clearAllProjects() {
   const ok = window.confirm('This will delete ALL projects from the sheet. Continue?');
   if (!ok) return;
 
-  const query = new URLSearchParams({
-    token: TOKEN,
-    clearAll: '1'
-  }).toString();
-
+  const query = new URLSearchParams({ token: TOKEN, clearAll: '1' }).toString();
   try {
     await fetch(`${API_URL}?${query}`);
     loadProjects();
@@ -233,9 +256,18 @@ async function clearAllProjects() {
     alert('Failed to clear all projects. Check console for details.');
   }
 }
-
-// Wire up the button
 document.getElementById('clearAllBtn')?.addEventListener('click', clearAllProjects);
+
+// ===== Toolbar events (3D) =====
+searchInput?.addEventListener('input', applyFiltersAndRender);
+statusFilter?.addEventListener('change', applyFiltersAndRender);
+sortBySelect?.addEventListener('change', applyFiltersAndRender);
+clearFiltersBtn?.addEventListener('click', () => {
+  if (searchInput) searchInput.value = '';
+  if (statusFilter) statusFilter.value = '';
+  if (sortBySelect) sortBySelect.value = 'priority-desc';
+  applyFiltersAndRender();
+});
 
 // ===== Initial load =====
 loadProjects();
