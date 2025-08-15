@@ -178,3 +178,18 @@ button:focus-visible{
 .edit-btn{ background-color:#007bff; color:#fff; }
 .edit-btn:hover{ background-color:#0062cc; }
 
+/* Progress bar under the summary */
+#summary .progress {
+  height: 6px;
+  background: #e5e7eb;          /* light gray track */
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+#summary .progress-fill {
+  height: 100%;
+  width: 0;
+  background: #22c55e;          /* default green */
+  transition: width .4s ease;    /* animate fill */
+}
