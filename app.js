@@ -184,6 +184,8 @@ function renderList(projects) {
       addInput.type = 'text';
       addInput.placeholder = 'New subtask…';
       addInput.setAttribute('aria-label', 'New subtask');
+      addInput.id = 'new-subtask-${rowIndex}';
+      addInput.name = 'new-subtask';
       addInput.style.flex = '1';
       addInput.style.padding = '6px 8px';
       addInput.style.border = '1px solid #e5e7eb';
