@@ -60,8 +60,8 @@ function renderList(projects) {
   list.innerHTML = '';
 
   projects.forEach((project) => {
-    // Map back to the real sheet row using the master array
-    const rowIndex = allProjects.indexOf(project) + 2; // +2 for header row
+    // Map back to the real sheet row (prefer stamped _row; fallback to indexOf)
+    const rowIndex = project._row ?? (allProjects.indexOf(project) + 2);
 
     const li = document.createElement('li');
 
@@ -85,16 +85,13 @@ function renderList(projects) {
     li.style.boxShadow = `0 1px 3px 0 #00000022`;
 
     // ============== Top row (title + actions + toggle) ==============
-    // Title text
     const text = document.createElement('span');
     text.className = 'item-left';
     text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
 
-    // Actions (Edit / Delete)
     const actions = document.createElement('div');
     actions.className = 'item-actions';
 
-    // Edit
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.classList.add('edit-btn');
@@ -102,7 +99,6 @@ function renderList(projects) {
     editBtn.onclick = () => renderEditForm(li, project, rowIndex);
     actions.appendChild(editBtn);
 
-    // Delete
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
     deleteBtn.classList.add('delete-btn');
@@ -113,14 +109,12 @@ function renderList(projects) {
     };
     actions.appendChild(deleteBtn);
 
-    // Toggle button (Show/Hide subtasks)
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
     toggleBtn.className = 'toggle-btn';
     toggleBtn.setAttribute('aria-expanded', 'false');
     toggleBtn.textContent = 'Show subtasks';
 
-    // Pack top row: [toggle + title] ..... [actions]
     const topRow = document.createElement('div');
     topRow.className = 'top-row';
 
@@ -137,48 +131,42 @@ function renderList(projects) {
 
     // ============== Subtasks block (collapsible) ==============
     const subUl = document.createElement('ul');
-    subUl.className = 'subtasks'; // hidden by default via CSS
+    subUl.className = 'subtasks';
 
-    let subtasks = parseSubtasks(project.Subtasks); // uses helper you added
+    let subtasks = parseSubtasks(project.Subtasks);
 
-    // Renders the subtasks list + add row
     function renderSubtasks() {
       subUl.innerHTML = '';
 
-      // Existing subtasks
       subtasks.forEach((st, idx) => {
         const textVal = typeof st === 'string' ? st : String(st?.text ?? '');
         const done = typeof st === 'object' ? !!st.done : false;
 
         const subLi = document.createElement('li');
 
-        // Done checkbox
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.checked = done;
-        cb.onchange = async () => {
-          // normalize to object shape for persistence
-          const updated = typeof st === 'object' ? { ...st } : { text: textVal };
-          updated.done = cb.checked;
-          subtasks[idx] = updated;
-          await saveSubtasks(rowIndex, subtasks); // uses helper you added
-          // strike-through label live
-          label.style.textDecoration = cb.checked ? 'line-through' : 'none';
-        };
         subLi.appendChild(cb);
 
-        // Subtask label
         const label = document.createElement('span');
         label.textContent = textVal;
         if (done) label.style.textDecoration = 'line-through';
         subLi.appendChild(label);
 
-        // Tiny delete button “✕”
+        cb.onchange = async () => {
+          const updated = typeof st === 'object' ? { ...st } : { text: textVal };
+          updated.done = cb.checked;
+          subtasks[idx] = updated;
+          await saveSubtasks(rowIndex, subtasks);
+          label.style.textDecoration = cb.checked ? 'line-through' : 'none';
+        };
+
         const del = document.createElement('button');
         del.type = 'button';
         del.textContent = '✕';
         del.title = 'Delete subtask';
-        del.className = 'toggle-btn'; // reuse small gray style
+        del.className = 'toggle-btn';
         del.style.padding = '2px 8px';
         del.onclick = async () => {
           subtasks.splice(idx, 1);
@@ -190,7 +178,6 @@ function renderList(projects) {
         subUl.appendChild(subLi);
       });
 
-      // Add-subtask inline input
       const addRow = document.createElement('li');
 
       const addInput = document.createElement('input');
@@ -227,21 +214,19 @@ function renderList(projects) {
       subUl.appendChild(addRow);
     }
 
-    // Initial render for this project’s subtasks
     renderSubtasks();
     li.appendChild(subUl);
 
-    // Toggle show/hide
     toggleBtn.onclick = () => {
       const showing = subUl.classList.toggle('show');
       toggleBtn.setAttribute('aria-expanded', String(showing));
       toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
     };
 
-    // Final mount
     list.appendChild(li);
   });
 }
+
 // ===== Filter/sort and render current view (3D) =====
 function applyFiltersAndRender() {
   const q = String(searchInput?.value || '').trim().toLowerCase();
