@@ -284,54 +284,52 @@ function applyFiltersAndRender() {
 async function loadProjects() {
   try {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
-    // inside loadProjects(), right after fetching:
-    allProjects = (Array.isArray(data) ? data : []).map((p, i) => ({ ...p, _row: i + 2 }));
     const data = await res.json();
 
-    // Save master copy
-    allProjects = Array.isArray(data) ? data : [];
+    // Save master copy (and stamp a _row for robust mapping)
+    allProjects = (Array.isArray(data) ? data : []).map((p, i) => ({ ...p, _row: i + 2 }));
 
-// Summary (+ progress bar)
-const total = allProjects.length;
-const complete = allProjects.filter(
-  p => String(p.Status || '').trim().toLowerCase() === 'complete'
-).length;
-const percent = total > 0 ? (complete / total) * 100 : 0;
+    // Summary (+ progress bar)
+    const total = allProjects.length;
+    const complete = allProjects.filter(
+      p => String(p.Status || '').trim().toLowerCase() === 'complete'
+    ).length;
+    const percent = total > 0 ? (complete / total) * 100 : 0;
 
-// Ensure summary structure: text + bar
-let summaryText = document.getElementById('summaryText');
-if (!summaryText) {
-  summaryEl.innerHTML = ''; // clear once
-  summaryText = document.createElement('div');
-  summaryText.id = 'summaryText';
-  summaryEl.appendChild(summaryText);
+    // Ensure summary structure: text + bar
+    let summaryText = document.getElementById('summaryText');
+    if (!summaryText) {
+      summaryEl.innerHTML = ''; // clear once
+      summaryText = document.createElement('div');
+      summaryText.id = 'summaryText';
+      summaryEl.appendChild(summaryText);
 
-  const bar = document.createElement('div');
-  bar.className = 'progress';
-  bar.id = 'progressBar';
+      const bar = document.createElement('div');
+      bar.className = 'progress';
+      bar.id = 'progressBar';
 
-  const fill = document.createElement('div');
-  fill.className = 'progress-fill';
-  fill.id = 'progressFill';
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+      fill.id = 'progressFill';
+      bar.appendChild(fill);
 
-  bar.appendChild(fill);
-  summaryEl.appendChild(bar);
-}
+      summaryEl.appendChild(bar);
+    }
 
-// Update summary text
-summaryText.textContent =
-  `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent.toFixed(1)}%)`;
+    // Update summary text
+    summaryText.textContent =
+      `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent.toFixed(1)}%)`;
 
-// Update progress fill + color thresholds
-const fillEl = document.getElementById('progressFill');
-fillEl.style.width = `${percent}%`;
-if (percent < 34) {
-  fillEl.style.background = '#ef4444';   // red
-} else if (percent < 67) {
-  fillEl.style.background = '#f59e0b';   // amber
-} else {
-  fillEl.style.background = '#22c55e';   // green
-}
+    // Update progress fill + color thresholds
+    const fillEl = document.getElementById('progressFill');
+    fillEl.style.width = `${percent}%`;
+    if (percent < 34) {
+      fillEl.style.background = '#ef4444';   // red
+    } else if (percent < 67) {
+      fillEl.style.background = '#f59e0b';   // amber
+    } else {
+      fillEl.style.background = '#22c55e';   // green
+    }
 
     // Render current view
     applyFiltersAndRender();
