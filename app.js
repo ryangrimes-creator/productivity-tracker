@@ -33,30 +33,48 @@ async function updateProject(row, name, priority, status) {
   await fetch(`${API_URL}?${query}`);
 }
 
+// Parse "Subtasks" which might be an array or a JSON string
+function parseSubtasks(raw) {
+  try {
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    const val = JSON.parse(raw);
+    return Array.isArray(val) ? val : [];
+  } catch {
+    return [];
+  }
+}
+
+// Save full subtasks array back to the sheet for a given row
+async function saveSubtasks(row, subtasksArray) {
+  const query = new URLSearchParams({
+    token: TOKEN,
+    row: String(row),
+    updateSubtasks: JSON.stringify(subtasksArray)
+  }).toString();
+  await fetch(`${API_URL}?${query}`);
+}
+
 // ===== Render a given list of projects (3C) =====
 function renderList(projects) {
   list.innerHTML = '';
 
   projects.forEach((project) => {
-    // Map back to real sheet row (based on the master array)
+    // Map back to the real sheet row using the master array
     const rowIndex = allProjects.indexOf(project) + 2; // +2 for header row
 
     const li = document.createElement('li');
 
-    // --- status background ---
+    // --- Status background colors ---
     const status = String(project.Status || '').trim().toLowerCase();
-    const colors = {
-      'complete': '#d4edda',
-      'in progress': '#fff3cd',
-      'not started': '#f8d7da'
-    };
+    const colors = { 'complete':'#d4edda', 'in progress':'#fff3cd', 'not started':'#f8d7da' };
     li.style.backgroundColor = colors[status] || '#ffffff';
     li.style.padding = '8px';
     li.style.marginBottom = '6px';
     li.style.borderRadius = '4px';
     li.style.listStyle = 'none';
 
-    // --- priority accent ---
+    // --- Priority accent (left border) ---
     const priorityNum = Number(String(project.Priority ?? '').trim());
     let accent = '#6c757d';
     if (priorityNum >= 4) accent = '#dc3545';
@@ -66,108 +84,164 @@ function renderList(projects) {
     li.style.outline = `2px solid ${accent}20`;
     li.style.boxShadow = `0 1px 3px 0 #00000022`;
 
-   // Text node
-  const text = document.createElement('span');
-  text.className = 'item-left';
-  text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+    // ============== Top row (title + actions + toggle) ==============
+    // Title text
+    const text = document.createElement('span');
+    text.className = 'item-left';
+    text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
 
-  // Actions (Edit/Delete) – you already have these
-  const actions = document.createElement('div');
-  actions.className = 'item-actions';
+    // Actions (Edit / Delete)
+    const actions = document.createElement('div');
+    actions.className = 'item-actions';
 
-  // Edit
-  const editBtn = document.createElement('button');
-  editBtn.textContent = 'Edit';
-  editBtn.classList.add('edit-btn');
-  editBtn.type = 'button';
-  editBtn.onclick = () => renderEditForm(li, project, rowIndex);
-  actions.appendChild(editBtn);
+    // Edit
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.classList.add('edit-btn');
+    editBtn.type = 'button';
+    editBtn.onclick = () => renderEditForm(li, project, rowIndex);
+    actions.appendChild(editBtn);
 
-  // Delete
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.classList.add('delete-btn');
-  deleteBtn.type = 'button';
-  deleteBtn.onclick = async () => {
-    await deleteProject(rowIndex);
-    loadProjects();
-  };
-  actions.appendChild(deleteBtn);
-
-  // NEW: Show/Hide Subtasks toggle (left of actions)
-  const toggleBtn = document.createElement('button');
-  toggleBtn.type = 'button';
-  toggleBtn.className = 'toggle-btn';
-  toggleBtn.setAttribute('aria-expanded', 'false');
-  toggleBtn.textContent = 'Show subtasks';
-
-  // Build a top row (toggle + title on left, actions on right)
-  const topRow = document.createElement('div');
-  topRow.className = 'top-row';
-
-  // Left side of the top row: toggle + title
-  const leftStack = document.createElement('div');
-  leftStack.style.display = 'flex';
-  leftStack.style.alignItems = 'center';
-  leftStack.style.gap = '8px';
-  leftStack.appendChild(toggleBtn);
-  leftStack.appendChild(text);
-
-  topRow.appendChild(leftStack);
-  topRow.appendChild(actions);
-  li.appendChild(topRow);
-
-  // NEW: Subtask list (hidden by default)
-  const subUl = document.createElement('ul');
-  subUl.className = 'subtasks';
-
-  // Try to read subtasks from data (supports array or JSON string); fall back to empty
-  let subtasks = [];
-  try {
-    const raw = project.Subtasks;
-    subtasks = Array.isArray(raw) ? raw : (raw ? JSON.parse(raw) : []);
-  } catch (_) {
-    subtasks = [];
-  }
-
-  // Render each subtask as a row with a checkbox (UI-only for now)
-  subtasks.forEach(st => {
-    // Support string or { text, done } shapes
-    const textVal = typeof st === 'string' ? st : String(st?.text ?? '');
-    const done = typeof st === 'object' && !!st?.done;
-
-    const subLi = document.createElement('li');
-
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = done;
-    cb.disabled = true; // UI-only until we wire backend saves
-    subLi.appendChild(cb);
-
-    const label = document.createElement('span');
-    label.textContent = textVal;
-    subLi.appendChild(label);
-
-    subUl.appendChild(subLi);
-  });
-
-  li.appendChild(subUl);
-
-  // Toggle behavior
-  toggleBtn.onclick = () => {
-    const showing = subUl.classList.toggle('show');
-    toggleBtn.setAttribute('aria-expanded', String(showing));
-    toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
-  };
-
+    // Delete
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.classList.add('delete-btn');
+    deleteBtn.type = 'button';
+    deleteBtn.onclick = async () => {
+      await deleteProject(rowIndex);
+      loadProjects();
     };
     actions.appendChild(deleteBtn);
 
-    li.appendChild(actions);
+    // Toggle button (Show/Hide subtasks)
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'toggle-btn';
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    toggleBtn.textContent = 'Show subtasks';
+
+    // Pack top row: [toggle + title] ..... [actions]
+    const topRow = document.createElement('div');
+    topRow.className = 'top-row';
+
+    const leftStack = document.createElement('div');
+    leftStack.style.display = 'flex';
+    leftStack.style.alignItems = 'center';
+    leftStack.style.gap = '8px';
+    leftStack.appendChild(toggleBtn);
+    leftStack.appendChild(text);
+
+    topRow.appendChild(leftStack);
+    topRow.appendChild(actions);
+    li.appendChild(topRow);
+
+    // ============== Subtasks block (collapsible) ==============
+    const subUl = document.createElement('ul');
+    subUl.className = 'subtasks'; // hidden by default via CSS
+
+    let subtasks = parseSubtasks(project.Subtasks); // uses helper you added
+
+    // Renders the subtasks list + add row
+    function renderSubtasks() {
+      subUl.innerHTML = '';
+
+      // Existing subtasks
+      subtasks.forEach((st, idx) => {
+        const textVal = typeof st === 'string' ? st : String(st?.text ?? '');
+        const done = typeof st === 'object' ? !!st.done : false;
+
+        const subLi = document.createElement('li');
+
+        // Done checkbox
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = done;
+        cb.onchange = async () => {
+          // normalize to object shape for persistence
+          const updated = typeof st === 'object' ? { ...st } : { text: textVal };
+          updated.done = cb.checked;
+          subtasks[idx] = updated;
+          await saveSubtasks(rowIndex, subtasks); // uses helper you added
+          // strike-through label live
+          label.style.textDecoration = cb.checked ? 'line-through' : 'none';
+        };
+        subLi.appendChild(cb);
+
+        // Subtask label
+        const label = document.createElement('span');
+        label.textContent = textVal;
+        if (done) label.style.textDecoration = 'line-through';
+        subLi.appendChild(label);
+
+        // Tiny delete button “✕”
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '✕';
+        del.title = 'Delete subtask';
+        del.className = 'toggle-btn'; // reuse small gray style
+        del.style.padding = '2px 8px';
+        del.onclick = async () => {
+          subtasks.splice(idx, 1);
+          await saveSubtasks(rowIndex, subtasks);
+          renderSubtasks();
+        };
+        subLi.appendChild(del);
+
+        subUl.appendChild(subLi);
+      });
+
+      // Add-subtask inline input
+      const addRow = document.createElement('li');
+
+      const addInput = document.createElement('input');
+      addInput.type = 'text';
+      addInput.placeholder = 'New subtask…';
+      addInput.ariaLabel = 'New subtask';
+      addInput.style.flex = '1';
+      addInput.style.padding = '6px 8px';
+      addInput.style.border = '1px solid #e5e7eb';
+      addInput.style.borderRadius = '8px';
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.textContent = '+ Add';
+      addBtn.className = 'edit-btn';
+      addBtn.style.marginLeft = '8px';
+
+      const add = async () => {
+        const val = addInput.value.trim();
+        if (!val) return;
+        subtasks.push({ text: val, done: false });
+        addInput.value = '';
+        await saveSubtasks(rowIndex, subtasks);
+        renderSubtasks();
+      };
+
+      addBtn.onclick = add;
+      addInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') add();
+      });
+
+      addRow.appendChild(addInput);
+      addRow.appendChild(addBtn);
+      subUl.appendChild(addRow);
+    }
+
+    // Initial render for this project’s subtasks
+    renderSubtasks();
+    li.appendChild(subUl);
+
+    // Toggle show/hide
+    toggleBtn.onclick = () => {
+      const showing = subUl.classList.toggle('show');
+      toggleBtn.setAttribute('aria-expanded', String(showing));
+      toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+    };
+
+    // Final mount
     list.appendChild(li);
   });
 }
-
 // ===== Filter/sort and render current view (3D) =====
 function applyFiltersAndRender() {
   const q = String(searchInput?.value || '').trim().toLowerCase();
