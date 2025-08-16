@@ -42,16 +42,16 @@
     <div id="summary" style="margin-top: 10px; font-weight: bold;"></div>
     <!-- Filter / Sort Toolbar -->
     <div id="toolbar" class="card toolbar">
-      <input id="searchInput" type="text" placeholder="Search projects…" aria-label="Search projects">
+      <input id="searchInput" name="searchInput" type="text" placeholder="Search projects…" aria-label="Search projects">
 
-      <select id="statusFilter" aria-label="Filter by status">
+      <select id="statusFilter" name="statusFilter" aria-label="Filter by status">
         <option value="">All status</option>
         <option value="Not Started">Not Started</option>
         <option value="In Progress">In Progress</option>
         <option value="Complete">Complete</option>
       </select>
 
-      <select id="sortBy" aria-label="Sort projects">
+      <select id="sortBy" name="sortBy" aria-label="Sort projects">
         <option value="priority-desc">Priority: High → Low</option>
         <option value="priority-asc">Priority: Low → High</option>
         <option value="status">Status</option>
@@ -69,6 +69,7 @@
  <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
