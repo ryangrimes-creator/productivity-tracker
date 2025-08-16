@@ -193,3 +193,46 @@ button:focus-visible{
   background: #22c55e;          /* default green */
   transition: width .4s ease;    /* animate fill */
 }
+
+/* Make list item stack vertically so subtasks can sit below the top row */
+#projectList li { display: block; }
+
+/* Top row (project title + actions) stays horizontal */
+#projectList li .top-row{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Subtasks block: indented with a left guide line */
+.subtasks{
+  display: none;                 /* hidden by default */
+  margin-top: 8px;
+  margin-left: 24px;
+  padding-left: 12px;
+  border-left: 2px dashed #e5e7eb;
+}
+.subtasks.show{ display:block; }
+
+.subtasks li{
+  list-style:none;
+  padding: 4px 0;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+
+/* Toggle button (neutral) */
+.toggle-btn{
+  background: #6b7280;    /* gray */
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color .25s ease, transform .15s ease, opacity .15s ease;
+  margin-right: 8px;
+}
+.toggle-btn:hover{ opacity:.95; transform: scale(1.03); }
+.toggle-btn:active{ transform: scale(.97); }
