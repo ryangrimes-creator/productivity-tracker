@@ -66,30 +66,100 @@ function renderList(projects) {
     li.style.outline = `2px solid ${accent}20`;
     li.style.boxShadow = `0 1px 3px 0 #00000022`;
 
-    // Text
-    const text = document.createElement('span');
-    text.className = 'item-left';
-    text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
-    li.appendChild(text);
+   // Text node
+  const text = document.createElement('span');
+  text.className = 'item-left';
+  text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
 
-    // Actions
-    const actions = document.createElement('div');
-    actions.className = 'item-actions';
+  // Actions (Edit/Delete) – you already have these
+  const actions = document.createElement('div');
+  actions.className = 'item-actions';
 
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.classList.add('edit-btn');
-    editBtn.type = 'button';
-    editBtn.onclick = () => renderEditForm(li, project, rowIndex);
-    actions.appendChild(editBtn);
+  // Edit
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.classList.add('edit-btn');
+  editBtn.type = 'button';
+  editBtn.onclick = () => renderEditForm(li, project, rowIndex);
+  actions.appendChild(editBtn);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.classList.add('delete-btn');
-    deleteBtn.type = 'button';
-    deleteBtn.onclick = async () => {
-      await deleteProject(rowIndex);
-      loadProjects();
+  // Delete
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.classList.add('delete-btn');
+  deleteBtn.type = 'button';
+  deleteBtn.onclick = async () => {
+    await deleteProject(rowIndex);
+    loadProjects();
+  };
+  actions.appendChild(deleteBtn);
+
+  // NEW: Show/Hide Subtasks toggle (left of actions)
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.className = 'toggle-btn';
+  toggleBtn.setAttribute('aria-expanded', 'false');
+  toggleBtn.textContent = 'Show subtasks';
+
+  // Build a top row (toggle + title on left, actions on right)
+  const topRow = document.createElement('div');
+  topRow.className = 'top-row';
+
+  // Left side of the top row: toggle + title
+  const leftStack = document.createElement('div');
+  leftStack.style.display = 'flex';
+  leftStack.style.alignItems = 'center';
+  leftStack.style.gap = '8px';
+  leftStack.appendChild(toggleBtn);
+  leftStack.appendChild(text);
+
+  topRow.appendChild(leftStack);
+  topRow.appendChild(actions);
+  li.appendChild(topRow);
+
+  // NEW: Subtask list (hidden by default)
+  const subUl = document.createElement('ul');
+  subUl.className = 'subtasks';
+
+  // Try to read subtasks from data (supports array or JSON string); fall back to empty
+  let subtasks = [];
+  try {
+    const raw = project.Subtasks;
+    subtasks = Array.isArray(raw) ? raw : (raw ? JSON.parse(raw) : []);
+  } catch (_) {
+    subtasks = [];
+  }
+
+  // Render each subtask as a row with a checkbox (UI-only for now)
+  subtasks.forEach(st => {
+    // Support string or { text, done } shapes
+    const textVal = typeof st === 'string' ? st : String(st?.text ?? '');
+    const done = typeof st === 'object' && !!st?.done;
+
+    const subLi = document.createElement('li');
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = done;
+    cb.disabled = true; // UI-only until we wire backend saves
+    subLi.appendChild(cb);
+
+    const label = document.createElement('span');
+    label.textContent = textVal;
+    subLi.appendChild(label);
+
+    subUl.appendChild(subLi);
+  });
+
+  li.appendChild(subUl);
+
+  // Toggle behavior
+  toggleBtn.onclick = () => {
+    const showing = subUl.classList.toggle('show');
+    toggleBtn.setAttribute('aria-expanded', String(showing));
+    toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+  };
+
     };
     actions.appendChild(deleteBtn);
 
