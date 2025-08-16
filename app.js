@@ -147,6 +147,8 @@ function renderList(projects) {
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.checked = done;
+        cb.id = 'subtask-done${rowIndex}-${idx}';
+        cb.name = 'subtask-done';
         subLi.appendChild(cb);
 
         const label = document.createElement('span');
