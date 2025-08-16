@@ -283,6 +283,8 @@ function applyFiltersAndRender() {
 async function loadProjects() {
   try {
     const res = await fetch(`${API_URL}?token=${TOKEN}`);
+    // inside loadProjects(), right after fetching:
+    allProjects = (Array.isArray(data) ? data : []).map((p, i) => ({ ...p, _row: i + 2 }));
     const data = await res.json();
 
     // Save master copy
