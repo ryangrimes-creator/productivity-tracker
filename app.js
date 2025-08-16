@@ -58,7 +58,6 @@ async function saveSubtasks(row, subtasksArray) {
 // ===== Render a given list of projects (3C) =====
 function renderList(projects) {
   list.innerHTML = '';
-  const rowIndex = project._row; // reliable even after filtering/sorting/cloning
 
   projects.forEach((project) => {
     // Map back to the real sheet row using the master array
