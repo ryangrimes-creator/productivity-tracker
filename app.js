@@ -137,140 +137,143 @@ let subtasks = parseSubtasks(project.Subtasks);
 const subUL = document.createElement('ul');
 subUL.className = 'subtasks';
 
+// DEBUG: prove we are here and what we will render
+console.log('[subtasks] row', rowIndex, 'items:', subtasks);
+
 // 2) Renderer
 function renderSubtasks() {
-  subUL.innerHTML = '';
+  try {
+    subUL.innerHTML = '';
 
-  // Existing subtasks
-  subtasks.forEach((subtask, idx) => {
-    const subLi = document.createElement('li');
-    subLi.className = 'subtask-item';
+    // Existing subtasks
+    (Array.isArray(subtasks) ? subtasks : []).forEach((subtask, idx) => {
+      const subLi = document.createElement('li');
+      subLi.className = 'subtask-item';
+      subLi.style.display = 'flex';
+      subLi.style.alignItems = 'center';
 
-    // checkbox
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !!subtask?.done;
-    cb.style.marginRight = '8px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!subtask?.done;
+      cb.style.marginRight = '8px';
 
-    // label (text)
-    const label = document.createElement('span');
-    const textVal = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-    label.textContent = textVal;
-    if (cb.checked) label.style.textDecoration = 'line-through';
+      const label = document.createElement('span');
+      const textVal = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
+      label.textContent = textVal;
+      if (cb.checked) label.style.textDecoration = 'line-through';
 
-    // inline edit on double-click
-    label.addEventListener('dblclick', () => {
-      const edit = document.createElement('input');
-      edit.type = 'text';
-      edit.value = textVal;
-      edit.autocomplete = 'off';
-      edit.name = `edit-subtask-${rowIndex}-${idx}`;
-      edit.style.flex = '1';
-      // swap label -> input
-      subLi.replaceChild(edit, label);
-      edit.focus();
-      edit.select();
+      // inline edit (dblclick)
+      label.addEventListener('dblclick', () => {
+        const edit = document.createElement('input');
+        edit.type = 'text';
+        edit.value = textVal;
+        edit.autocomplete = 'off';
+        edit.name = `edit-subtask-${rowIndex}-${idx}`;
+        edit.style.flex = '1';
+        subLi.replaceChild(edit, label);
+        edit.focus(); edit.select();
 
-      const save = async () => {
-        const v = edit.value.trim();
-        // normalize to object shape
-        subtasks[idx] = { text: v || textVal, done: cb.checked };
+        const save = async () => {
+          const v = edit.value.trim();
+          subtasks[idx] = { text: v || textVal, done: cb.checked };
+          await saveSubtasks(rowIndex, subtasks);
+          renderSubtasks();
+        };
+        const cancel = () => renderSubtasks();
+
+        edit.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') cancel();
+        });
+        edit.addEventListener('blur', save);
+      });
+
+      cb.onchange = async () => {
+        const txt = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
+        subtasks[idx] = { text: txt, done: cb.checked };
+        await saveSubtasks(rowIndex, subtasks);
+        label.style.textDecoration = cb.checked ? 'line-through' : 'none';
+      };
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = '✕';
+      del.title = 'Delete subtask';
+      del.className = 'toggle-btn';
+      del.style.padding = '2px 8px';
+      del.style.marginLeft = '8px';
+      del.onclick = async () => {
+        subtasks.splice(idx, 1);
         await saveSubtasks(rowIndex, subtasks);
         renderSubtasks();
       };
-      const cancel = () => renderSubtasks();
 
-      edit.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') save();
-        if (e.key === 'Escape') cancel();
-      });
-      edit.addEventListener('blur', save);
+      subLi.appendChild(cb);
+      subLi.appendChild(label);
+      subLi.appendChild(del);
+      subUL.appendChild(subLi);
     });
 
-    // react to checkbox toggle
-    cb.onchange = async () => {
-      const txt = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-      subtasks[idx] = { text: txt, done: cb.checked };
-      await saveSubtasks(rowIndex, subtasks);
-      label.style.textDecoration = cb.checked ? 'line-through' : 'none';
-    };
+    // Add-subtask row (always appended)
+    const addRow = document.createElement('li');
+    addRow.className = 'subtask-add';
+    addRow.style.display = 'flex';
+    addRow.style.alignItems = 'center';
+    addRow.style.gap = '6px';
+    addRow.style.marginTop = '6px';
 
-    // tiny delete button
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.textContent = '✕';
-    del.title = 'Delete subtask';
-    del.className = 'toggle-btn';
-    del.style.padding = '2px 8px';
-    del.style.marginLeft = '8px';
-    del.onclick = async () => {
-      subtasks.splice(idx, 1);
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = 'New subtask…';
+    addInput.autocomplete = 'off';
+    addInput.name = `new-subtask-${rowIndex}`;
+    addInput.style.flex = '1';
+    addInput.style.padding = '6px 8px';
+    addInput.style.border = '1px solid #e5e7eb';
+    addInput.style.borderRadius = '8px';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.textContent = 'Add';
+    addBtn.className = 'edit-btn';
+
+    const add = async () => {
+      const val = addInput.value.trim();
+      if (!val) return;
+      subtasks.push({ text: val, done: false });
+      addInput.value = '';
       await saveSubtasks(rowIndex, subtasks);
       renderSubtasks();
     };
 
-    // layout
-    subLi.style.display = 'flex';
-    subLi.style.alignItems = 'center';
+    addBtn.onclick = add;
+    addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
 
-    subLi.appendChild(cb);
-    subLi.appendChild(label);
-    subLi.appendChild(del);
-    subUL.appendChild(subLi);
-  });
+    addRow.appendChild(addInput);
+    addRow.appendChild(addBtn);
+    subUL.appendChild(addRow);
 
-  // Add-subtask row (always visible when expanded)
-  const addRow = document.createElement('li');
-  addRow.className = 'subtask-add';
-  addRow.style.display = 'flex';
-  addRow.style.alignItems = 'center';
-  addRow.style.gap = '6px';
-  addRow.style.marginTop = '6px';
-
-  const addInput = document.createElement('input');
-  addInput.type = 'text';
-  addInput.placeholder = 'New subtask…';
-  addInput.autocomplete = 'off';
-  addInput.name = `new-subtask-${rowIndex}`;
-  addInput.style.flex = '1';
-  addInput.style.padding = '6px 8px';
-  addInput.style.border = '1px solid #e5e7eb';
-  addInput.style.borderRadius = '8px';
-
-  const addBtn = document.createElement('button');
-  addBtn.type = 'button';
-  addBtn.textContent = 'Add';
-  addBtn.className = 'edit-btn';
-
-  const add = async () => {
-    const val = addInput.value.trim();
-    if (!val) return;
-    subtasks.push({ text: val, done: false });
-    addInput.value = '';
-    await saveSubtasks(rowIndex, subtasks);
-    renderSubtasks();
-  };
-
-  addBtn.onclick = add;
-  addInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') add();
-  });
-
-  addRow.appendChild(addInput);
-  addRow.appendChild(addBtn);
-  subUL.appendChild(addRow);
+  } catch (e) {
+    console.error('[subtasks] render error row', rowIndex, e);
+    // even on error, try to keep add row visible
+    const fallback = document.createElement('li');
+    fallback.textContent = 'Unable to render subtasks.';
+    fallback.style.color = '#b91c1c';
+    subUL.appendChild(fallback);
+  }
 }
 
 // initial paint and attach
 renderSubtasks();
 li.appendChild(subUL);
 
-// keep your existing toggle button behavior
+// toggle (make sure it shows when you click)
 toggleBtn.onclick = () => {
   const showing = subUL.classList.toggle('show');
   toggleBtn.setAttribute('aria-expanded', String(showing));
   toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
 };
+
 
 
 // ===== Filter/sort and render current view =====
