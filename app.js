@@ -256,6 +256,8 @@ function applyFiltersAndRender() {
   });
 
   // 3) Render
+  const subUL = document.createElement('ul');
+  subUL.className = 'subtask-list';
   renderList(view);
 }
 
