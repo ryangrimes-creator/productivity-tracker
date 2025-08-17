@@ -256,7 +256,6 @@ function renderList(projects) {
       addRow.appendChild(addInput);
       addRow.appendChild(addBtn);
       subUl.appendChild(addRow);
-    }
 
     renderSubtasks();
     li.appendChild(subUl);
