@@ -137,97 +137,141 @@ let subtasks = parseSubtasks(project.Subtasks);
 const subUL = document.createElement('ul');
 subUL.className = 'subtasks';
 
-// 2) Renderer (uses the "subtasks" declared above)
+// 2) Renderer
 function renderSubtasks() {
   subUL.innerHTML = '';
+
+  // Existing subtasks
   subtasks.forEach((subtask, idx) => {
     const subLi = document.createElement('li');
+    subLi.className = 'subtask-item';
 
+    // checkbox
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = !!subtask?.done;
+    cb.style.marginRight = '8px';
+
+    // label (text)
+    const label = document.createElement('span');
+    const textVal = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
+    label.textContent = textVal;
+    if (cb.checked) label.style.textDecoration = 'line-through';
+
+    // inline edit on double-click
+    label.addEventListener('dblclick', () => {
+      const edit = document.createElement('input');
+      edit.type = 'text';
+      edit.value = textVal;
+      edit.autocomplete = 'off';
+      edit.name = `edit-subtask-${rowIndex}-${idx}`;
+      edit.style.flex = '1';
+      // swap label -> input
+      subLi.replaceChild(edit, label);
+      edit.focus();
+      edit.select();
+
+      const save = async () => {
+        const v = edit.value.trim();
+        // normalize to object shape
+        subtasks[idx] = { text: v || textVal, done: cb.checked };
+        await saveSubtasks(rowIndex, subtasks);
+        renderSubtasks();
+      };
+      const cancel = () => renderSubtasks();
+
+      edit.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') save();
+        if (e.key === 'Escape') cancel();
+      });
+      edit.addEventListener('blur', save);
+    });
+
+    // react to checkbox toggle
     cb.onchange = async () => {
-      // normalize to an object so we can persist
-      const text = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-      subtasks[idx] = { text, done: cb.checked };
+      const txt = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
+      subtasks[idx] = { text: txt, done: cb.checked };
       await saveSubtasks(rowIndex, subtasks);
       label.style.textDecoration = cb.checked ? 'line-through' : 'none';
     };
 
-    const label = document.createElement('span');
-    label.textContent = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-    if (cb.checked) label.style.textDecoration = 'line-through';
-
+    // tiny delete button
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = '✕';
     del.title = 'Delete subtask';
     del.className = 'toggle-btn';
     del.style.padding = '2px 8px';
+    del.style.marginLeft = '8px';
     del.onclick = async () => {
       subtasks.splice(idx, 1);
       await saveSubtasks(rowIndex, subtasks);
       renderSubtasks();
     };
 
+    // layout
+    subLi.style.display = 'flex';
+    subLi.style.alignItems = 'center';
+
     subLi.appendChild(cb);
     subLi.appendChild(label);
     subLi.appendChild(del);
     subUL.appendChild(subLi);
   });
+
+  // Add-subtask row (always visible when expanded)
+  const addRow = document.createElement('li');
+  addRow.className = 'subtask-add';
+  addRow.style.display = 'flex';
+  addRow.style.alignItems = 'center';
+  addRow.style.gap = '6px';
+  addRow.style.marginTop = '6px';
+
+  const addInput = document.createElement('input');
+  addInput.type = 'text';
+  addInput.placeholder = 'New subtask…';
+  addInput.autocomplete = 'off';
+  addInput.name = `new-subtask-${rowIndex}`;
+  addInput.style.flex = '1';
+  addInput.style.padding = '6px 8px';
+  addInput.style.border = '1px solid #e5e7eb';
+  addInput.style.borderRadius = '8px';
+
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.textContent = 'Add';
+  addBtn.className = 'edit-btn';
+
+  const add = async () => {
+    const val = addInput.value.trim();
+    if (!val) return;
+    subtasks.push({ text: val, done: false });
+    addInput.value = '';
+    await saveSubtasks(rowIndex, subtasks);
+    renderSubtasks();
+  };
+
+  addBtn.onclick = add;
+  addInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') add();
+  });
+
+  addRow.appendChild(addInput);
+  addRow.appendChild(addBtn);
+  subUL.appendChild(addRow);
 }
 
-// 3) “Add subtask” row
-const addRow = document.createElement('div');
-addRow.style.display = 'flex';
-addRow.style.gap = '6px';
-
-const addInput = document.createElement('input');
-addInput.type = 'text';
-addInput.placeholder = 'New subtask…';
-addInput.setAttribute('aria-label', 'New subtask');
-addInput.style.flex = '1 1 0%';
-addInput.style.padding = '6px 8px';
-addInput.style.border = '1px solid #e5e7eb';
-addInput.style.borderRadius = '8px';
-
-const addBtn = document.createElement('button');
-addBtn.type = 'button';
-addBtn.textContent = '+';
-addBtn.className = 'edit-btn';
-
-const add = async () => {
-  const val = addInput.value.trim();
-  if (!val) return;
-  subtasks.push({ text: val, done: false });
-  addInput.value = '';
-  await saveSubtasks(rowIndex, subtasks);
-  renderSubtasks();
-};
-
-addBtn.onclick = add;
-addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-
-addRow.appendChild(addInput);
-addRow.appendChild(addBtn);
-subUL.appendChild(addRow);
-
-// 4) Initial paint and attach
+// initial paint and attach
 renderSubtasks();
 li.appendChild(subUL);
 
+// keep your existing toggle button behavior
+toggleBtn.onclick = () => {
+  const showing = subUL.classList.toggle('show');
+  toggleBtn.setAttribute('aria-expanded', String(showing));
+  toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+};
 
-    // 5) Toggle show/hide
-    toggleBtn.onclick = () => {
-      const showing = subUL.classList.toggle('show');
-      toggleBtn.setAttribute('aria-expanded', String(showing));
-      toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
-    };
-
-    // Final mount
-    list.appendChild(li);
-  });
-}
 
 // ===== Filter/sort and render current view =====
 function applyFiltersAndRender() {
