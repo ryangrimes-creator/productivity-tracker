@@ -375,8 +375,8 @@ function renderEditForm(li, project, rowIndex) {
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.value = project.Name;
-  nameInput.id = `edit-name-${rowIndex}`;
-  nameInput.name = 'edit-name';
+  nameInput.id = `edit-name-${rowIndex}-${Date.now()}`;   // unique id
+  nameInput.name = `edit-name-${rowIndex}`;               // unique name too
   nameInput.setAttribute('aria-label', 'Project name');
   nameInput.style.marginRight = '6px';
 
@@ -386,16 +386,17 @@ function renderEditForm(li, project, rowIndex) {
   priorityInput.value = project.Priority;
   priorityInput.min = 1;
   priorityInput.max = 5;
-  priorityInput.id = `edit-priority-${rowIndex}`;
-  priorityInput.name = 'edit-priority';
+  priorityInput.id = `edit-priority-${rowIndex}-${Date.now()}`;
+  priorityInput.name = `edit-priority-${rowIndex}`;
   priorityInput.setAttribute('aria-label', 'Priority (1–5)');
   priorityInput.style.marginRight = '6px';
 
   // Status
   const statusSelect = document.createElement('select');
-  statusSelect.id = `edit-status-${rowIndex}`;
-  statusSelect.name = 'edit-status';
+  statusSelect.id = `edit-status-${rowIndex}-${Date.now()}`;
+  statusSelect.name = `edit-status-${rowIndex}`;
   statusSelect.setAttribute('aria-label', 'Status');
+
   ['Not Started', 'In Progress', 'Complete'].forEach(status => {
     const option = document.createElement('option');
     option.value = status;
