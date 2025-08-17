@@ -129,42 +129,28 @@ function renderList(projects) {
     topRow.appendChild(actions);
     li.appendChild(topRow);
 
-    // ============== Subtasks block (collapsible) ==============
-    function renderSubtasks() {
-      subUl.innerHTML = '';
+   // === Subtasks ===
+const subUL = document.createElement('ul');
+subUL.className = 'subtasks';
 
-    subtasks.forEach((st, idx) => {
-      const textVal = typeof st === 'string' ? st : String(st?.text ?? '');
-      const done = typeof st === 'object' ? !!st.done : false;
+// Function to render existing subtasks
+function renderSubtasks() {
+  subUL.innerHTML = '';
+  subtasks.forEach((subtask, idx) => {
+    const subLi = document.createElement('li');
 
-      const subLi = document.createElement('li');
-
-    // --- Checkbox ---
     const cb = document.createElement('input');
     cb.type = 'checkbox';
-    cb.checked = done;
-    cb.id = `subtask-done-${rowIndex}-${idx}`;   // unique id
-    cb.name = `subtask-done-${rowIndex}-${idx}`; // unique name
-    cb.setAttribute('aria-label', `Mark subtask "${textVal}" as done`);
-    subLi.appendChild(cb);
-
-    // --- Label (linked to checkbox) ---
-    const label = document.createElement('label');
-    label.setAttribute('for', cb.id);
-    label.textContent = textVal;
-    if (done) label.style.textDecoration = 'line-through';
-    subLi.appendChild(label);
-
-    // Update state when toggled
+    cb.checked = subtask.done;
     cb.onchange = async () => {
-      const updated = typeof st === 'object' ? { ...st } : { text: textVal };
-      updated.done = cb.checked;
-      subtasks[idx] = updated;
+      subtasks[idx].done = cb.checked;
       await saveSubtasks(rowIndex, subtasks);
-      label.style.textDecoration = cb.checked ? 'line-through' : 'none';
     };
 
-    // --- Delete button ---
+    const span = document.createElement('span');
+    span.textContent = subtask.text;
+    if (subtask.done) span.style.textDecoration = 'line-through';
+
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = '✕';
@@ -176,95 +162,61 @@ function renderList(projects) {
       await saveSubtasks(rowIndex, subtasks);
       renderSubtasks();
     };
+
+    subLi.appendChild(cb);
+    subLi.appendChild(span);
     subLi.appendChild(del);
-
-    subUl.appendChild(subLi);
+    subUL.appendChild(subLi);
   });
-
-  // --- Add new subtask row ---
-  const addRow = document.createElement('li');
-
-  const addInput = document.createElement('input');
-  addInput.type = 'text';
-  addInput.placeholder = 'New subtask…';
-  addInput.setAttribute('aria-label', 'New subtask');
-  addInput.id = `new-subtask-${rowIndex}`;    // unique per project
-  addInput.name = `new-subtask-${rowIndex}`;
-  addInput.style.flex = '1';
-  addInput.style.padding = '6px 8px';
-  addInput.style.border = '1px solid #e5e7eb';
-  addInput.style.borderRadius = '8px';
-
-  const addBtn = document.createElement('button');
-  addBtn.type = 'button';
-  addBtn.textContent = '+ Add';
-  addBtn.className = 'edit-btn';
-  addBtn.style.marginLeft = '8px';
-
-  const add = async () => {
-    const val = addInput.value.trim();
-    if (!val) return;
-    subtasks.push({ text: val, done: false });
-    addInput.value = '';
-    await saveSubtasks(rowIndex, subtasks);
-    renderSubtasks();
-  };
-
-  addBtn.onclick = add;
-  addInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') add();
-  });
-
-  addRow.appendChild(addInput);
-  addRow.appendChild(addBtn);
-  subUl.appendChild(addRow);
 }
 
-      const addRow = document.createElement('li');
+// Input row for adding a new subtask
+const addRow = document.createElement('div');
+addRow.style.display = 'flex';
+addRow.style.gap = '6px';
 
-      const addInput = document.createElement('input');
-      addInput.type = 'text';
-      addInput.placeholder = 'New subtask…';
-      addInput.setAttribute('aria-label', 'New subtask');
-      addInput.id = `new-subtask-${rowIndex}`;
-      addInput.name = 'new-subtask';
-      addInput.style.flex = '1';
-      addInput.style.padding = '6px 8px';
-      addInput.style.border = '1px solid #e5e7eb';
-      addInput.style.borderRadius = '8px';
+const addInput = document.createElement('input');
+addInput.type = 'text';
+addInput.placeholder = 'New subtask…';
+addInput.setAttribute('aria-label', 'New subtask');
+addInput.style.flex = '1 1 0%';
+addInput.style.padding = '6px 8px';
+addInput.style.border = '1px solid rgb(229, 231, 235)';
+addInput.style.borderRadius = '8px';
 
-      const addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.textContent = '+ Add';
-      addBtn.className = 'edit-btn';
-      addBtn.style.marginLeft = '8px';
+const addBtn = document.createElement('button');
+addBtn.type = 'button';
+addBtn.textContent = '+';
 
-      const add = async () => {
-        const val = addInput.value.trim();
-        if (!val) return;
-        subtasks.push({ text: val, done: false });
-        addInput.value = '';
-        await saveSubtasks(rowIndex, subtasks);
-        renderSubtasks();
-      };
+// Add handler
+const add = async () => {
+  const val = addInput.value.trim();
+  if (!val) return;
+  subtasks.push({ text: val, done: false });
+  addInput.value = '';
+  await saveSubtasks(rowIndex, subtasks);
+  renderSubtasks();
+};
 
-      addBtn.onclick = add;
-      addInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') add();
-      });
+addBtn.onclick = add;
+addInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') add();
+});
 
-      addRow.appendChild(addInput);
-      addRow.appendChild(addBtn);
-      subUl.appendChild(addRow);
+addRow.appendChild(addInput);
+addRow.appendChild(addBtn);
+subUL.appendChild(addRow);
 
-    renderSubtasks();
-    li.appendChild(subUl);
+// Render everything
+renderSubtasks();
+li.appendChild(subUL);
 
-    toggleBtn.onclick = () => {
-      const showing = subUl.classList.toggle('show');
-      toggleBtn.setAttribute('aria-expanded', String(showing));
-      toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
-    };
+// Toggle button for show/hide
+toggleBtn.onclick = () => {
+  const showing = subUL.classList.toggle('show');
+  toggleBtn.setAttribute('aria-expanded', String(showing));
+  toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+};
 
     list.appendChild(li);
   });
