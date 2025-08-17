@@ -55,7 +55,7 @@ async function saveSubtasks(row, subtasksArray) {
   await fetch(`${API_URL}?${query}`);
 }
 
-// ===== Render a given list of projects (3C) =====
+// ===== Render a given list of projects =====
 function renderList(projects) {
   list.innerHTML = '';
 
@@ -129,100 +129,105 @@ function renderList(projects) {
     topRow.appendChild(actions);
     li.appendChild(topRow);
 
-   // === Subtasks ===
-const subUL = document.createElement('ul');
-subUL.className = 'subtasks';
+    // ===================== Subtasks =====================
+    // 1) Source of truth for this project's subtasks
+    let subtasks = parseSubtasks(project.Subtasks);
 
-// Function to render existing subtasks
-function renderSubtasks() {
-  subUL.innerHTML = '';
-  subtasks.forEach((subtask, idx) => {
-    const subLi = document.createElement('li');
+    // 2) Container
+    const subUL = document.createElement('ul');
+    subUL.className = 'subtasks';
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = subtask.done;
-    cb.onchange = async () => {
-      subtasks[idx].done = cb.checked;
-      await saveSubtasks(rowIndex, subtasks);
-    };
+    // 3) Renderer
+    function renderSubtasks() {
+      subUL.innerHTML = '';
+      subtasks.forEach((subtask, idx) => {
+        const subLi = document.createElement('li');
 
-    const span = document.createElement('span');
-    span.textContent = subtask.text;
-    if (subtask.done) span.style.textDecoration = 'line-through';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!subtask.done;
+        cb.onchange = async () => {
+          subtasks[idx] = { text: subtask.text ?? String(subtask), done: cb.checked };
+          await saveSubtasks(rowIndex, subtasks);
+          label.style.textDecoration = cb.checked ? 'line-through' : 'none';
+        };
 
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.textContent = '✕';
-    del.title = 'Delete subtask';
-    del.className = 'toggle-btn';
-    del.style.padding = '2px 8px';
-    del.onclick = async () => {
-      subtasks.splice(idx, 1);
+        const label = document.createElement('span');
+        label.textContent = typeof subtask === 'string' ? subtask : String(subtask.text ?? '');
+        if (cb.checked) label.style.textDecoration = 'line-through';
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '✕';
+        del.title = 'Delete subtask';
+        del.className = 'toggle-btn';
+        del.style.padding = '2px 8px';
+        del.onclick = async () => {
+          subtasks.splice(idx, 1);
+          await saveSubtasks(rowIndex, subtasks);
+          renderSubtasks();
+        };
+
+        subLi.appendChild(cb);
+        subLi.appendChild(label);
+        subLi.appendChild(del);
+        subUL.appendChild(subLi);
+      });
+    }
+
+    // 4) Add-subtask row
+    const addRow = document.createElement('div');
+    addRow.style.display = 'flex';
+    addRow.style.gap = '6px';
+
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = 'New subtask…';
+    addInput.setAttribute('aria-label', 'New subtask');
+    addInput.style.flex = '1 1 0%';
+    addInput.style.padding = '6px 8px';
+    addInput.style.border = '1px solid rgb(229, 231, 235)';
+    addInput.style.borderRadius = '8px';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.textContent = '+';
+
+    const add = async () => {
+      const val = addInput.value.trim();
+      if (!val) return;
+      subtasks.push({ text: val, done: false });
+      addInput.value = '';
       await saveSubtasks(rowIndex, subtasks);
       renderSubtasks();
     };
 
-    subLi.appendChild(cb);
-    subLi.appendChild(span);
-    subLi.appendChild(del);
-    subUL.appendChild(subLi);
-  });
-}
+    addBtn.onclick = add;
+    addInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') add();
+    });
 
-// Input row for adding a new subtask
-const addRow = document.createElement('div');
-addRow.style.display = 'flex';
-addRow.style.gap = '6px';
+    addRow.appendChild(addInput);
+    addRow.appendChild(addBtn);
+    subUL.appendChild(addRow);
 
-const addInput = document.createElement('input');
-addInput.type = 'text';
-addInput.placeholder = 'New subtask…';
-addInput.setAttribute('aria-label', 'New subtask');
-addInput.style.flex = '1 1 0%';
-addInput.style.padding = '6px 8px';
-addInput.style.border = '1px solid rgb(229, 231, 235)';
-addInput.style.borderRadius = '8px';
+    // Initial render + mount
+    renderSubtasks();
+    li.appendChild(subUL);
 
-const addBtn = document.createElement('button');
-addBtn.type = 'button';
-addBtn.textContent = '+';
+    // 5) Toggle show/hide
+    toggleBtn.onclick = () => {
+      const showing = subUL.classList.toggle('show');
+      toggleBtn.setAttribute('aria-expanded', String(showing));
+      toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+    };
 
-// Add handler
-const add = async () => {
-  const val = addInput.value.trim();
-  if (!val) return;
-  subtasks.push({ text: val, done: false });
-  addInput.value = '';
-  await saveSubtasks(rowIndex, subtasks);
-  renderSubtasks();
-};
-
-addBtn.onclick = add;
-addInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') add();
-});
-
-addRow.appendChild(addInput);
-addRow.appendChild(addBtn);
-subUL.appendChild(addRow);
-
-// Render everything
-renderSubtasks();
-li.appendChild(subUL);
-
-// Toggle button for show/hide
-toggleBtn.onclick = () => {
-  const showing = subUL.classList.toggle('show');
-  toggleBtn.setAttribute('aria-expanded', String(showing));
-  toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
-};
-
+    // Final mount
     list.appendChild(li);
   });
 }
 
-// ===== Filter/sort and render current view (3D) =====
+// ===== Filter/sort and render current view =====
 function applyFiltersAndRender() {
   const q = String(searchInput?.value || '').trim().toLowerCase();
   const statusSelected = String(statusFilter?.value || '');
@@ -256,8 +261,6 @@ function applyFiltersAndRender() {
   });
 
   // 3) Render
-  const subUL = document.createElement('ul');
-  subUL.className = 'subtask-list';
   renderList(view);
 }
 
@@ -419,7 +422,7 @@ async function clearAllProjects() {
 }
 document.getElementById('clearAllBtn')?.addEventListener('click', clearAllProjects);
 
-// ===== Toolbar events (3D) =====
+// ===== Toolbar events =====
 searchInput?.addEventListener('input', applyFiltersAndRender);
 statusFilter?.addEventListener('change', applyFiltersAndRender);
 sortBySelect?.addEventListener('change', applyFiltersAndRender);
