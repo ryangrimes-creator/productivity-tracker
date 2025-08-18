@@ -129,6 +129,9 @@ function renderList(projects) {
     topRow.appendChild(actions);
     li.appendChild(topRow);
 
+    console.log('[ui] added toggle button for row', rowIndex);
+
+    
 // === Subtasks ===
 // 0) Source of truth (must be first and in the same scope)
 let subtasks = parseSubtasks(project.Subtasks);
