@@ -267,14 +267,15 @@ function renderSubtasks() {
 renderSubtasks();
 li.appendChild(subUL);
 
-// toggle (make sure it shows when you click)
 toggleBtn.onclick = () => {
   const showing = subUL.classList.toggle('show');
   toggleBtn.setAttribute('aria-expanded', String(showing));
   toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
+  // If it just opened and there are no subtasks, focus the add input:
+  if (showing && subUL.querySelector('.subtask-add input')) {
+    subUL.querySelector('.subtask-add input').focus();
+  }
 };
-
-
 
 // ===== Filter/sort and render current view =====
 function applyFiltersAndRender() {
