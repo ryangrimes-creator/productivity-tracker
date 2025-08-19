@@ -280,6 +280,10 @@ toggleBtn.onclick = () => {
   }
 };
 
+      list.appendChild(li);   // if this line isn’t already earlier, keep it here
+});                       // <-- closes projects.forEach(...)
+}                         // <-- closes function renderList(projects)
+
 // ===== Filter/sort and render current view =====
 function applyFiltersAndRender() {
   const q = String(searchInput?.value || '').trim().toLowerCase();
