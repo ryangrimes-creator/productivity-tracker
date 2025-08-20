@@ -1,24 +1,28 @@
 // ===== Config =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbzZ6lR1XKvsYj0A6oSK3Z5CQvJkEYYR-eGllQ5sQThOI2QhuzUPt_bOhbFBX_XjyT0R/exec';
-const TOKEN   = 'Project1285';
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbzZ6lR1XKvsYj0A6oSK3Z5CQvJkEYYR-eGllQ5sQThOI2QhuzUPt_bOhbFBX_XjyT0R/exec";
+const TOKEN = "Project1285";
 
 // ===== Elements =====
-const form = document.getElementById('projectForm');
-const list = document.getElementById('projectList');
-const summaryEl = document.getElementById('summary');
+const form = document.getElementById("projectForm");
+const list = document.getElementById("projectList");
+const summaryEl = document.getElementById("summary");
 
 // ===== Filter/Sort State =====
 let allProjects = []; // master copy from server
 
 // Controls (toolbar)
-const searchInput     = document.getElementById('searchInput');
-const statusFilter    = document.getElementById('statusFilter');
-const sortBySelect    = document.getElementById('sortBy');
-const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const sortBySelect = document.getElementById("sortBy");
+const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 
 // ===== Backend helpers =====
 async function deleteProject(row) {
-  const query = new URLSearchParams({ token: TOKEN, deleteRow: row }).toString();
+  const query = new URLSearchParams({
+    token: TOKEN,
+    deleteRow: row,
+  }).toString();
   await fetch(`${API_URL}?${query}`);
 }
 
@@ -28,7 +32,7 @@ async function updateProject(row, name, priority, status) {
     updateRow: row,
     Name: name,
     Priority: priority,
-    Status: status
+    Status: status,
   }).toString();
   await fetch(`${API_URL}?${query}`);
 }
@@ -50,78 +54,84 @@ async function saveSubtasks(row, subtasksArray) {
   const query = new URLSearchParams({
     token: TOKEN,
     row: String(row),
-    updateSubtasks: JSON.stringify(subtasksArray)
+    updateSubtasks: JSON.stringify(subtasksArray),
   }).toString();
   await fetch(`${API_URL}?${query}`);
 }
 
 // ===== Render a given list of projects =====
 function renderList(projects) {
-  list.innerHTML = '';
+  list.innerHTML = "";
 
   projects.forEach((project) => {
     // Map back to the real sheet row (prefer stamped _row; fallback to indexOf)
-    const rowIndex = project._row ?? (allProjects.indexOf(project) + 2);
+    const rowIndex = project._row ?? allProjects.indexOf(project) + 2;
 
-    const li = document.createElement('li');
+    const li = document.createElement("li");
 
     // --- Status background colors ---
-    const status = String(project.Status || '').trim().toLowerCase();
-    const colors = { 'complete':'#d4edda', 'in progress':'#fff3cd', 'not started':'#f8d7da' };
-    li.style.backgroundColor = colors[status] || '#ffffff';
-    li.style.padding = '8px';
-    li.style.marginBottom = '6px';
-    li.style.borderRadius = '4px';
-    li.style.listStyle = 'none';
+    const status = String(project.Status || "")
+      .trim()
+      .toLowerCase();
+    const colors = {
+      complete: "#d4edda",
+      "in progress": "#fff3cd",
+      "not started": "#f8d7da",
+    };
+    li.style.backgroundColor = colors[status] || "#ffffff";
+    li.style.padding = "8px";
+    li.style.marginBottom = "6px";
+    li.style.borderRadius = "4px";
+    li.style.listStyle = "none";
 
     // --- Priority accent (left border) ---
-    const priorityNum = Number(String(project.Priority ?? '').trim());
-    let accent = '#6c757d';
-    if (priorityNum >= 4) accent = '#dc3545';
-    else if (priorityNum === 3) accent = '#ffc107';
-    else if (priorityNum > 0) accent = '#28a745';
+    const priorityNum = Number(String(project.Priority ?? "").trim());
+    let accent = "#6c757d";
+    if (priorityNum >= 4) accent = "#dc3545";
+    else if (priorityNum === 3) accent = "#ffc107";
+    else if (priorityNum > 0) accent = "#28a745";
     li.style.borderLeft = `8px solid ${accent}`;
     li.style.outline = `2px solid ${accent}20`;
     li.style.boxShadow = `0 1px 3px 0 #00000022`;
 
     // ============== Top row (title + actions + toggle) ==============
-    const text = document.createElement('span');
-    text.className = 'item-left';
+    const text = document.createElement("span");
+    text.className = "item-left";
     text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
 
-    const actions = document.createElement('div');
-    actions.className = 'item-actions';
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
 
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.classList.add('edit-btn');
-    editBtn.type = 'button';
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.classList.add("edit-btn");
+    editBtn.type = "button";
     editBtn.onclick = () => renderEditForm(li, project, rowIndex);
     actions.appendChild(editBtn);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.classList.add('delete-btn');
-    deleteBtn.type = 'button';
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.classList.add("delete-btn");
+    deleteBtn.type = "button";
     deleteBtn.onclick = async () => {
       await deleteProject(rowIndex);
       loadProjects();
     };
     actions.appendChild(deleteBtn);
 
-    const toggleBtn = document.createElement('button');
-    toggleBtn.type = 'button';
-    toggleBtn.className = 'toggle-btn';
-    toggleBtn.setAttribute('aria-expanded', 'false');
-    toggleBtn.textContent = 'Show subtasks';
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "toggle-btn";
+    toggleBtn.setAttribute("aria-expanded", "false");
+    toggleBtn.textContent = "Show subtasks";
 
-    const topRow = document.createElement('div');
-    topRow.className = 'top-row';
+    const topRow = document.createElement("div");
+    topRow.className = "top-row";
 
-    const leftStack = document.createElement('div');
-    leftStack.style.display = 'flex';
-    leftStack.style.alignItems = 'center';
-    leftStack.style.gap = '8px';
+    const leftStack = document.createElement("div");
+    leftStack.style.display = "flex";
+    leftStack.style.alignItems = "center";
+    leftStack.style.gap = "8px";
     leftStack.appendChild(toggleBtn);
     leftStack.appendChild(text);
 
@@ -129,189 +139,198 @@ function renderList(projects) {
     topRow.appendChild(actions);
     li.appendChild(topRow);
 
-    console.log('[ui] added toggle button for row', rowIndex);
+    console.log("[ui] added toggle button for row", rowIndex);
 
-    
-// === Subtasks ===
-// 0) Source of truth (must be first and in the same scope)
-let subtasks = parseSubtasks(project.Subtasks);
+    // === Subtasks ===
+    // 0) Source of truth (must be first and in the same scope)
+    let subtasks = parseSubtasks(project.Subtasks);
 
-// 1) Container
-const subUL = document.createElement('ul');
-subUL.className = 'subtasks';
+    // 1) Container
+    const subUL = document.createElement("ul");
+    subUL.className = "subtasks";
 
-// DEBUG: prove we are here and what we will render
-console.log('[subtasks] row', rowIndex, 'items:', subtasks);
+    // DEBUG: prove we are here and what we will render
+    console.log("[subtasks] row", rowIndex, "items:", subtasks);
 
-// 2) Renderer
-function renderSubtasks() {
-  try {
-    subUL.innerHTML = '';
+    // 2) Renderer
+    function renderSubtasks() {
+      try {
+        subUL.innerHTML = "";
 
-    // Existing subtasks
-    (Array.isArray(subtasks) ? subtasks : []).forEach((subtask, idx) => {
-      const subLi = document.createElement('li');
-      subLi.className = 'subtask-item';
-      subLi.style.display = 'flex';
-      subLi.style.alignItems = 'center';
+        // Existing subtasks
+        (Array.isArray(subtasks) ? subtasks : []).forEach((subtask, idx) => {
+          const subLi = document.createElement("li");
+          subLi.className = "subtask-item";
+          subLi.style.display = "flex";
+          subLi.style.alignItems = "center";
 
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = !!subtask?.done;
-      cb.style.marginRight = '8px';
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = !!subtask?.done;
+          cb.style.marginRight = "8px";
 
-      const label = document.createElement('span');
-      const textVal = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-      label.textContent = textVal;
-      if (cb.checked) label.style.textDecoration = 'line-through';
+          const label = document.createElement("span");
+          const textVal =
+            typeof subtask === "string" ? subtask : String(subtask?.text ?? "");
+          label.textContent = textVal;
+          if (cb.checked) label.style.textDecoration = "line-through";
 
-      // inline edit (dblclick)
-      label.addEventListener('dblclick', () => {
-        const edit = document.createElement('input');
-        edit.type = 'text';
-        edit.value = textVal;
-        edit.autocomplete = 'off';
-        edit.name = `edit-subtask-${rowIndex}-${idx}`;
-        edit.style.flex = '1';
-        subLi.replaceChild(edit, label);
-        edit.focus(); edit.select();
+          // inline edit (dblclick)
+          label.addEventListener("dblclick", () => {
+            const edit = document.createElement("input");
+            edit.type = "text";
+            edit.value = textVal;
+            edit.autocomplete = "off";
+            edit.name = `edit-subtask-${rowIndex}-${idx}`;
+            edit.style.flex = "1";
+            subLi.replaceChild(edit, label);
+            edit.focus();
+            edit.select();
 
-        const save = async () => {
-          const v = edit.value.trim();
-          subtasks[idx] = { text: v || textVal, done: cb.checked };
+            const save = async () => {
+              const v = edit.value.trim();
+              subtasks[idx] = { text: v || textVal, done: cb.checked };
+              await saveSubtasks(rowIndex, subtasks);
+              renderSubtasks();
+            };
+            const cancel = () => renderSubtasks();
+
+            edit.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") cancel();
+            });
+            edit.addEventListener("blur", save);
+          });
+
+          cb.onchange = async () => {
+            const txt =
+              typeof subtask === "string"
+                ? subtask
+                : String(subtask?.text ?? "");
+            subtasks[idx] = { text: txt, done: cb.checked };
+            await saveSubtasks(rowIndex, subtasks);
+            label.style.textDecoration = cb.checked ? "line-through" : "none";
+          };
+
+          const del = document.createElement("button");
+          del.type = "button";
+          del.textContent = "✕";
+          del.title = "Delete subtask";
+          del.className = "toggle-btn";
+          del.style.padding = "2px 8px";
+          del.style.marginLeft = "8px";
+          del.onclick = async () => {
+            subtasks.splice(idx, 1);
+            await saveSubtasks(rowIndex, subtasks);
+            renderSubtasks();
+          };
+
+          subLi.appendChild(cb);
+          subLi.appendChild(label);
+          subLi.appendChild(del);
+          subUL.appendChild(subLi);
+        });
+
+        // Add-subtask row (always appended)
+        const addRow = document.createElement("li");
+        addRow.className = "subtask-add";
+        addRow.style.display = "flex";
+        addRow.style.alignItems = "center";
+        addRow.style.gap = "6px";
+        addRow.style.marginTop = "6px";
+
+        const addInput = document.createElement("input");
+        addInput.type = "text";
+        addInput.placeholder = "New subtask…";
+        addInput.autocomplete = "off";
+        addInput.name = `new-subtask-${rowIndex}`;
+        addInput.style.flex = "1";
+        addInput.style.padding = "6px 8px";
+        addInput.style.border = "1px solid #e5e7eb";
+        addInput.style.borderRadius = "8px";
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.textContent = "Add";
+        addBtn.className = "edit-btn";
+
+        const add = async () => {
+          const val = addInput.value.trim();
+          if (!val) return;
+          subtasks.push({ text: val, done: false });
+          addInput.value = "";
           await saveSubtasks(rowIndex, subtasks);
           renderSubtasks();
         };
-        const cancel = () => renderSubtasks();
 
-        edit.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') save();
-          if (e.key === 'Escape') cancel();
+        addBtn.onclick = add;
+        addInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") add();
         });
-        edit.addEventListener('blur', save);
-      });
 
-      cb.onchange = async () => {
-        const txt = typeof subtask === 'string' ? subtask : String(subtask?.text ?? '');
-        subtasks[idx] = { text: txt, done: cb.checked };
-        await saveSubtasks(rowIndex, subtasks);
-        label.style.textDecoration = cb.checked ? 'line-through' : 'none';
-      };
+        addRow.appendChild(addInput);
+        addRow.appendChild(addBtn);
+        subUL.appendChild(addRow);
+      } catch (e) {
+        console.error("[subtasks] render error row", rowIndex, e);
+        // even on error, try to keep add row visible
+        const fallback = document.createElement("li");
+        fallback.textContent = "Unable to render subtasks.";
+        fallback.style.color = "#b91c1c";
+        subUL.appendChild(fallback);
+      }
+    }
 
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.textContent = '✕';
-      del.title = 'Delete subtask';
-      del.className = 'toggle-btn';
-      del.style.padding = '2px 8px';
-      del.style.marginLeft = '8px';
-      del.onclick = async () => {
-        subtasks.splice(idx, 1);
-        await saveSubtasks(rowIndex, subtasks);
-        renderSubtasks();
-      };
+    // initial paint and attach
+    renderSubtasks();
+    li.appendChild(subUL);
 
-      subLi.appendChild(cb);
-      subLi.appendChild(label);
-      subLi.appendChild(del);
-      subUL.appendChild(subLi);
-    });
-
-    // Add-subtask row (always appended)
-    const addRow = document.createElement('li');
-    addRow.className = 'subtask-add';
-    addRow.style.display = 'flex';
-    addRow.style.alignItems = 'center';
-    addRow.style.gap = '6px';
-    addRow.style.marginTop = '6px';
-
-    const addInput = document.createElement('input');
-    addInput.type = 'text';
-    addInput.placeholder = 'New subtask…';
-    addInput.autocomplete = 'off';
-    addInput.name = `new-subtask-${rowIndex}`;
-    addInput.style.flex = '1';
-    addInput.style.padding = '6px 8px';
-    addInput.style.border = '1px solid #e5e7eb';
-    addInput.style.borderRadius = '8px';
-
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.textContent = 'Add';
-    addBtn.className = 'edit-btn';
-
-    const add = async () => {
-      const val = addInput.value.trim();
-      if (!val) return;
-      subtasks.push({ text: val, done: false });
-      addInput.value = '';
-      await saveSubtasks(rowIndex, subtasks);
-      renderSubtasks();
+    toggleBtn.onclick = () => {
+      const showing = subUL.classList.toggle("show");
+      toggleBtn.setAttribute("aria-expanded", String(showing));
+      toggleBtn.textContent = showing ? "Hide subtasks" : "Show subtasks";
+      // If it just opened and there are no subtasks, focus the add input:
+      if (showing && subUL.querySelector(".subtask-add input")) {
+        subUL.querySelector(".subtask-add input").focus();
+      }
     };
 
-    addBtn.onclick = add;
-    addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
-
-    addRow.appendChild(addInput);
-    addRow.appendChild(addBtn);
-    subUL.appendChild(addRow);
-
-  } catch (e) {
-    console.error('[subtasks] render error row', rowIndex, e);
-    // even on error, try to keep add row visible
-    const fallback = document.createElement('li');
-    fallback.textContent = 'Unable to render subtasks.';
-    fallback.style.color = '#b91c1c';
-    subUL.appendChild(fallback);
-  }
-}
-
-// initial paint and attach
-renderSubtasks();
-li.appendChild(subUL);
-
-toggleBtn.onclick = () => {
-  const showing = subUL.classList.toggle('show');
-  toggleBtn.setAttribute('aria-expanded', String(showing));
-  toggleBtn.textContent = showing ? 'Hide subtasks' : 'Show subtasks';
-  // If it just opened and there are no subtasks, focus the add input:
-  if (showing && subUL.querySelector('.subtask-add input')) {
-    subUL.querySelector('.subtask-add input').focus();
-  }
-};
-
-      list.appendChild(li);   // if this line isn’t already earlier, keep it here
-});                       // <-- closes projects.forEach(...)
-}                         // <-- closes function renderList(projects)
+    list.appendChild(li); // if this line isn’t already earlier, keep it here
+  }); // <-- closes projects.forEach(...)
+} // <-- closes function renderList(projects)
 
 // ===== Filter/sort and render current view =====
 function applyFiltersAndRender() {
-  const q = String(searchInput?.value || '').trim().toLowerCase();
-  const statusSelected = String(statusFilter?.value || '');
-  const sortBy = String(sortBySelect?.value || 'priority-desc');
+  const q = String(searchInput?.value || "")
+    .trim()
+    .toLowerCase();
+  const statusSelected = String(statusFilter?.value || "");
+  const sortBy = String(sortBySelect?.value || "priority-desc");
 
   // 1) Filter
-  let view = allProjects.filter(p => {
-    const name = String(p.Name || '').toLowerCase();
+  let view = allProjects.filter((p) => {
+    const name = String(p.Name || "").toLowerCase();
     const matchesText = q ? name.includes(q) : true;
     const matchesStatus = statusSelected
-      ? String(p.Status || '') === statusSelected
+      ? String(p.Status || "") === statusSelected
       : true;
     return matchesText && matchesStatus;
   });
 
   // 2) Sort
-  const statusOrder = { 'Not Started': 0, 'In Progress': 1, 'Complete': 2 };
+  const statusOrder = { "Not Started": 0, "In Progress": 1, Complete: 2 };
   view.sort((a, b) => {
     switch (sortBy) {
-      case 'priority-asc':
+      case "priority-asc":
         return Number(a.Priority) - Number(b.Priority);
-      case 'status':
-        return (statusOrder[a.Status] ?? 99) - (statusOrder[b.Status] ?? 99)
-            || String(a.Name || '').localeCompare(String(b.Name || ''));
-      case 'name':
-        return String(a.Name || '').localeCompare(String(b.Name || ''));
-      case 'priority-desc':
+      case "status":
+        return (
+          (statusOrder[a.Status] ?? 99) - (statusOrder[b.Status] ?? 99) ||
+          String(a.Name || "").localeCompare(String(b.Name || ""))
+        );
+      case "name":
+        return String(a.Name || "").localeCompare(String(b.Name || ""));
+      case "priority-desc":
       default:
         return Number(b.Priority) - Number(a.Priority);
     }
@@ -324,25 +343,26 @@ function applyFiltersAndRender() {
 // ===== UI - load & summary =====
 async function loadProjects() {
   try {
-    console.log('[load] fetching', `${API_URL}?token=${TOKEN}`);
-    const res = await fetch(`${API_URL}?token=${TOKEN}`, { method: 'GET' });
+    console.log("[load] fetching", `${API_URL}?token=${TOKEN}`);
+    const res = await fetch(`${API_URL}?token=${TOKEN}`, { method: "GET" });
 
-    console.log('[load] status', res.status, res.statusText);
+    console.log("[load] status", res.status, res.statusText);
     const text = await res.text();
-    console.log('[load] raw response:', text);
+    console.log("[load] raw response:", text);
 
     let data;
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error('[load] JSON parse failed:', e);
-      list.innerHTML = '<li>Backend did not return JSON. Check deployment/token.</li>';
+      console.error("[load] JSON parse failed:", e);
+      list.innerHTML =
+        "<li>Backend did not return JSON. Check deployment/token.</li>";
       return;
     }
 
     if (!Array.isArray(data)) {
-      console.error('[load] Not an array:', data);
-      list.innerHTML = '<li>Unexpected response shape from backend.</li>';
+      console.error("[load] Not an array:", data);
+      list.innerHTML = "<li>Unexpected response shape from backend.</li>";
       return;
     }
 
@@ -352,70 +372,78 @@ async function loadProjects() {
     // Summary
     const total = allProjects.length;
     const complete = allProjects.filter(
-      p => String(p.Status || '').trim().toLowerCase() === 'complete'
+      (p) =>
+        String(p.Status || "")
+          .trim()
+          .toLowerCase() === "complete"
     ).length;
     const percent = total > 0 ? (complete / total) * 100 : 0;
 
-    let summaryText = document.getElementById('summaryText');
+    let summaryText = document.getElementById("summaryText");
     if (!summaryText) {
-      summaryEl.innerHTML = '';
-      summaryText = document.createElement('div');
-      summaryText.id = 'summaryText';
+      summaryEl.innerHTML = "";
+      summaryText = document.createElement("div");
+      summaryText.id = "summaryText";
       summaryEl.appendChild(summaryText);
 
-      const bar = document.createElement('div');
-      bar.className = 'progress'; bar.id = 'progressBar';
-      const fill = document.createElement('div');
-      fill.className = 'progress-fill'; fill.id = 'progressFill';
+      const bar = document.createElement("div");
+      bar.className = "progress";
+      bar.id = "progressBar";
+      const fill = document.createElement("div");
+      fill.className = "progress-fill";
+      fill.id = "progressFill";
       bar.appendChild(fill);
       summaryEl.appendChild(bar);
     }
-    summaryText.textContent = `${total} project${total !== 1 ? 's' : ''} · ${complete} complete (${percent.toFixed(1)}%)`;
+    summaryText.textContent = `${total} project${
+      total !== 1 ? "s" : ""
+    } · ${complete} complete (${percent.toFixed(1)}%)`;
 
-    const fillEl = document.getElementById('progressFill');
+    const fillEl = document.getElementById("progressFill");
     fillEl.style.width = `${percent}%`;
-    fillEl.style.background = percent < 34 ? '#ef4444' : percent < 67 ? '#f59e0b' : '#22c55e';
+    fillEl.style.background =
+      percent < 34 ? "#ef4444" : percent < 67 ? "#f59e0b" : "#22c55e";
 
     // Render
     applyFiltersAndRender();
   } catch (err) {
-    console.error('[load] fetch failed:', err);
-    list.innerHTML = '<li>Error loading projects (see console).</li>';
+    console.error("[load] fetch failed:", err);
+    list.innerHTML = "<li>Error loading projects (see console).</li>";
   }
 }
 
 // ===== UI - inline edit =====
 function renderEditForm(li, project, rowIndex) {
-  li.innerHTML = '';
+  li.innerHTML = "";
 
   // Name
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
   nameInput.value = project.Name;
-  nameInput.id = `edit-name-${rowIndex}-${Date.now()}`;   // unique id
-  nameInput.name = `edit-name-${rowIndex}`;               // unique name too
-  nameInput.setAttribute('aria-label', 'Project name');
-  nameInput.style.marginRight = '6px';
+  nameInput.id = `edit-name-${rowIndex}-${Date.now()}`; // unique id
+  nameInput.name = `edit-name-${rowIndex}`; // unique name too
+  nameInput.setAttribute("aria-label", "Project name");
+  nameInput.style.marginRight = "6px";
 
   // Priority
-  const priorityInput = document.createElement('input');
-  priorityInput.type = 'number';
+  const priorityInput = document.createElement("input");
+  priorityInput.type = "number";
   priorityInput.value = project.Priority;
   priorityInput.min = 1;
   priorityInput.max = 5;
   priorityInput.id = `edit-priority-${rowIndex}-${Date.now()}`;
   priorityInput.name = `edit-priority-${rowIndex}`;
-  priorityInput.setAttribute('aria-label', 'Priority (1–5)');
-  priorityInput.style.marginRight = '6px';
+  priorityInput.setAttribute("aria-label", "Priority (1–5)");
+  priorityInput.style.marginRight = "6px";
 
   // Status
-  const statusSelect = document.createElement('select');
+  const statusSelect = document.createElement("select");
   statusSelect.id = `edit-status-${rowIndex}-${Date.now()}`;
   statusSelect.name = `edit-status-${rowIndex}`;
-  statusSelect.setAttribute('aria-label', 'Status');
+  statusSelect.setAttribute("aria-label", "Status");
 
-  ['Not Started', 'In Progress', 'Complete'].forEach(status => {
-    const option = document.createElement('option');
+  ["Not Started", "In Progress", "Complete"].forEach((status) => {
+    const option = document.createElement("option");
     option.value = status;
     option.textContent = status;
     if (status === project.Status) option.selected = true;
@@ -423,9 +451,9 @@ function renderEditForm(li, project, rowIndex) {
   });
 
   // Save
-  const saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Save';
-  saveBtn.type = 'button';
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Save";
+  saveBtn.type = "button";
   saveBtn.onclick = async () => {
     await updateProject(
       rowIndex,
@@ -443,19 +471,19 @@ function renderEditForm(li, project, rowIndex) {
 }
 
 // ===== Form submit (use FormData with names) =====
-form.addEventListener('submit', async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const fd = new FormData(form);
 
-  const name = fd.get('name');
-  const priority = fd.get('priority');
-  const status = fd.get('status');
+  const name = fd.get("name");
+  const priority = fd.get("priority");
+  const status = fd.get("status");
 
   const query = new URLSearchParams({
     token: TOKEN,
     Name: name,
     Priority: priority,
-    Status: status
+    Status: status,
   }).toString();
 
   try {
@@ -463,34 +491,38 @@ form.addEventListener('submit', async (e) => {
     form.reset();
     loadProjects();
   } catch (err) {
-    console.error('Failed to add project:', err);
+    console.error("Failed to add project:", err);
   }
 });
 
 // ===== Clear all projects =====
 async function clearAllProjects() {
-  const ok = window.confirm('This will delete ALL projects from the sheet. Continue?');
+  const ok = window.confirm(
+    "This will delete ALL projects from the sheet. Continue?"
+  );
   if (!ok) return;
 
-  const query = new URLSearchParams({ token: TOKEN, clearAll: '1' }).toString();
+  const query = new URLSearchParams({ token: TOKEN, clearAll: "1" }).toString();
   try {
     await fetch(`${API_URL}?${query}`);
     loadProjects();
   } catch (err) {
-    console.error('Failed to clear all projects:', err);
-    alert('Failed to clear all projects. Check console for details.');
+    console.error("Failed to clear all projects:", err);
+    alert("Failed to clear all projects. Check console for details.");
   }
 }
-document.getElementById('clearAllBtn')?.addEventListener('click', clearAllProjects);
+document
+  .getElementById("clearAllBtn")
+  ?.addEventListener("click", clearAllProjects);
 
 // ===== Toolbar events =====
-searchInput?.addEventListener('input', applyFiltersAndRender);
-statusFilter?.addEventListener('change', applyFiltersAndRender);
-sortBySelect?.addEventListener('change', applyFiltersAndRender);
-clearFiltersBtn?.addEventListener('click', () => {
-  if (searchInput) searchInput.value = '';
-  if (statusFilter) statusFilter.value = '';
-  if (sortBySelect) sortBySelect.value = 'priority-desc';
+searchInput?.addEventListener("input", applyFiltersAndRender);
+statusFilter?.addEventListener("change", applyFiltersAndRender);
+sortBySelect?.addEventListener("change", applyFiltersAndRender);
+clearFiltersBtn?.addEventListener("click", () => {
+  if (searchInput) searchInput.value = "";
+  if (statusFilter) statusFilter.value = "";
+  if (sortBySelect) sortBySelect.value = "priority-desc";
   applyFiltersAndRender();
 });
 
