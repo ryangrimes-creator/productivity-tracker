@@ -3,14 +3,15 @@
 export const API_URL = 'https://script.google.com/macros/s/AKfycbzZ6lR1XKvsYj0A6oSK3Z5CQvJkEYYR-eGllQ5sQThOI2QhuzUPt_bOhbFBX_XjyT0R/exec';
 export const TOKEN   = 'Project1285';
 
-// Fetch all projects from the backend
+// ==== Fetch all projects from backend ====
 export async function fetchProjects() {
   const res = await fetch(`${API_URL}?token=${TOKEN}`);
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
   const data = await res.json();
   return (Array.isArray(data) ? data : []).map((p, i) => ({ ...p, _row: i + 2 }));
 }
 
-// Add a new project
+// ==== Add a new project ====
 export async function addProject(name, priority, status) {
   const query = new URLSearchParams({
     token: TOKEN,
@@ -19,35 +20,40 @@ export async function addProject(name, priority, status) {
     Status: status
   }).toString();
 
-  return fetch(`${API_URL}?${query}`);
+  const res = await fetch(`${API_URL}?${query}`);
+  if (!res.ok) throw new Error(`Add failed: ${res.status} ${res.statusText}`);
 }
 
-// Update an existing project
+// ==== Update an existing project ====
 export async function updateProject(row, name, priority, status) {
   const query = new URLSearchParams({
     token: TOKEN,
-    updateRow: row,
+    update: "1",
+    row: String(row),
     Name: name,
     Priority: priority,
     Status: status
   }).toString();
 
-  return fetch(`${API_URL}?${query}`);
+  const res = await fetch(`${API_URL}?${query}`);
+  if (!res.ok) throw new Error(`Update failed: ${res.status} ${res.statusText}`);
 }
 
-// Delete a project
+// ==== Delete a project ====
 export async function deleteProject(row) {
-  const query = new URLSearchParams({ token: TOKEN, deleteRow: row }).toString();
-  return fetch(`${API_URL}?${query}`);
+  const query = new URLSearchParams({ token: TOKEN, delete: "1", row: String(row) }).toString();
+  const res = await fetch(`${API_URL}?${query}`);
+  if (!res.ok) throw new Error(`Delete failed: ${res.status} ${res.statusText}`);
 }
 
-// Clear all projects
+// ==== Clear all projects ====
 export async function clearAllProjects() {
   const query = new URLSearchParams({ token: TOKEN, clearAll: '1' }).toString();
-  return fetch(`${API_URL}?${query}`);
+  const res = await fetch(`${API_URL}?${query}`);
+  if (!res.ok) throw new Error(`Clear failed: ${res.status} ${res.statusText}`);
 }
 
-// Parse subtasks safely
+// ==== Parse subtasks safely ====
 export function parseSubtasks(raw) {
   try {
     if (Array.isArray(raw)) return raw;
@@ -59,14 +65,17 @@ export function parseSubtasks(raw) {
   }
 }
 
-// Save subtasks for a given row
+// ==== Save subtasks for a given row ====
 export async function saveSubtasks(row, subtasksArray) {
   const query = new URLSearchParams({
     token: TOKEN,
+    updateSubtasks: "1",
     row: String(row),
-    updateSubtasks: JSON.stringify(subtasksArray)
+    subtasks: JSON.stringify(subtasksArray)
   }).toString();
 
-  return fetch(`${API_URL}?${query}`);
+  const res = await fetch(`${API_URL}?${query}`);
+  if (!res.ok) throw new Error(`Save subtasks failed: ${res.status} ${res.statusText}`);
 }
+
 
