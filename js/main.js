@@ -8,6 +8,17 @@ import {
   saveSubtasks,
 } from './projects.js';
 
+import {
+  fetchProjects,
+  addProject,
+  clearAllProjects
+} from './projects.js';
+
+import {
+  initUI,
+  setProjects
+} from './ui.js';
+
 // ===== Config =====
 const API_URL =
   "https://script.google.com/macros/s/AKfycbzZ6lR1XKvsYj0A6oSK3Z5CQvJkEYYR-eGllQ5sQThOI2QhuzUPt_bOhbFBX_XjyT0R/exec";
@@ -313,72 +324,12 @@ function applyFiltersAndRender() {
 // ===== UI - load & summary =====
 async function loadProjects() {
   try {
-    console.log("[load] fetching", `${API_URL}?token=${TOKEN}`);
-    const res = await fetch(`${API_URL}?token=${TOKEN}`, { method: "GET" });
-
-    console.log("[load] status", res.status, res.statusText);
-    const text = await res.text();
-    console.log("[load] raw response:", text);
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error("[load] JSON parse failed:", e);
-      list.innerHTML =
-        "<li>Backend did not return JSON. Check deployment/token.</li>";
-      return;
-    }
-
-    if (!Array.isArray(data)) {
-      console.error("[load] Not an array:", data);
-      list.innerHTML = "<li>Unexpected response shape from backend.</li>";
-      return;
-    }
-
-    // Stamp _row for stable mapping
-    allProjects = data.map((p, i) => ({ ...p, _row: i + 2 }));
-
-    // Summary
-    const total = allProjects.length;
-    const complete = allProjects.filter(
-      (p) =>
-        String(p.Status || "")
-          .trim()
-          .toLowerCase() === "complete"
-    ).length;
-    const percent = total > 0 ? (complete / total) * 100 : 0;
-
-    let summaryText = document.getElementById("summaryText");
-    if (!summaryText) {
-      summaryEl.innerHTML = "";
-      summaryText = document.createElement("div");
-      summaryText.id = "summaryText";
-      summaryEl.appendChild(summaryText);
-
-      const bar = document.createElement("div");
-      bar.className = "progress";
-      bar.id = "progressBar";
-      const fill = document.createElement("div");
-      fill.className = "progress-fill";
-      fill.id = "progressFill";
-      bar.appendChild(fill);
-      summaryEl.appendChild(bar);
-    }
-    summaryText.textContent = `${total} project${
-      total !== 1 ? "s" : ""
-    } · ${complete} complete (${percent.toFixed(1)}%)`;
-
-    const fillEl = document.getElementById("progressFill");
-    fillEl.style.width = `${percent}%`;
-    fillEl.style.background =
-      percent < 34 ? "#ef4444" : percent < 67 ? "#f59e0b" : "#22c55e";
-
-    // Render
-    applyFiltersAndRender();
+    const projects = await fetchProjects();
+    setProjects(projects); // sends to ui.js to handle rendering
   } catch (err) {
     console.error("[load] fetch failed:", err);
-    list.innerHTML = "<li>Error loading projects (see console).</li>";
+    document.getElementById("projectList").innerHTML =
+      "<li>Error loading projects. Check console.</li>";
   }
 }
 
