@@ -422,16 +422,15 @@ document
   .getElementById("clearAllBtn")
   ?.addEventListener("click", clearAllProjects);
 
-// ===== Toolbar events =====
-searchInput?.addEventListener("input", applyFiltersAndRender);
-statusFilter?.addEventListener("change", applyFiltersAndRender);
-sortBySelect?.addEventListener("change", applyFiltersAndRender);
-clearFiltersBtn?.addEventListener("click", () => {
-  if (searchInput) searchInput.value = "";
-  if (statusFilter) statusFilter.value = "";
-  if (sortBySelect) sortBySelect.value = "priority-desc";
-  applyFiltersAndRender();
-});
+// ===== Toolbar event handlers =====
+document
+  .getElementById("clearAllBtn")
+  ?.addEventListener("click", async () => {
+    await clearAllProjects();
+    loadProjects();
+  });
 
-// ===== Initial load =====
+// ===== Initialize UI and fetch projects =====
+initializeUI();
 loadProjects();
+
