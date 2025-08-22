@@ -9,12 +9,6 @@ import {
 } from './projects.js';
 
 import {
-  fetchProjects,
-  addProject,
-  clearAllProjects
-} from './projects.js';
-
-import {
   initUI,
   setProjects
 } from './ui.js';
