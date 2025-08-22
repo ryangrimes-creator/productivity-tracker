@@ -425,6 +425,6 @@ document
   });
 
 // ===== Initialize UI and fetch projects =====
-initializeUI();
+initUI(loadProjects);
 loadProjects();
 
