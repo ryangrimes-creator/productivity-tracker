@@ -15,8 +15,6 @@ export function initUI(config) {
   statusFilter = config.statusFilter;
   sortBySelect = config.sortBySelect;
   allProjects = config.allProjects;
-
-  applyFiltersAndRender(); // initial render
 }
 
 export function setProjects(projects) {
