@@ -37,7 +37,7 @@ const clearFiltersBtn = document.getElementById("clearFiltersBtn");
 // ===== Render a given list of projects =====
 function renderList(projects) {
   list.innerHTML = "";
-
+  console.log("Rendering project list:", projects);
   projects.forEach((project) => {
     // Map back to the real sheet row (prefer stamped _row; fallback to indexOf)
     const rowIndex = project._row ?? allProjects.indexOf(project) + 2;
