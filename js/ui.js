@@ -58,7 +58,13 @@ export function applyFiltersAndRender() {
 }
 
 export function renderList(projects) {
-  listEl.innerHTML = "";
+  const list = document.getElementById('projectList');
+  if (!list) {
+    console.error('[renderList] Missing element: #projectList');
+    return;
+  }
+  list.innerHTML = '';
+
 
   projects.forEach((project) => {
     const rowIndex = project._row ?? allProjects.indexOf(project) + 2;
