@@ -64,7 +64,7 @@ export function renderList(projects) {
     return;
   }
   
-  list.innerHTML = ""; // clear old list
+  listEl.innerHTML = ""; // clear old list
 
   projects.forEach((project) => {
     const rowIndex = project._row ?? allProjects.indexOf(project) + 2;
