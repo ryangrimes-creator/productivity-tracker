@@ -121,6 +121,20 @@ export function renderList(projects) {
     editBtn.onclick = () => renderEditForm(li, project, rowIndex);
     actions.appendChild(editBtn);
 
+      // Save
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Save";
+    saveBtn.type = "button";
+    saveBtn.onclick = async () => {
+      await updateProject(
+      rowIndex,
+      nameInput.value,
+      priorityInput.value,
+      statusSelect.value
+    );
+    loadProjects();
+    };
+
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
     deleteBtn.classList.add("delete-btn");
