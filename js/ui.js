@@ -1,91 +1,30 @@
-// ui.js
-import renderEditForm from './main.js';
-
-let allProjects = [];
-
-export function setProjects(projects) {
-  allProjects = projects;
-  applyFiltersAndRender();
-}
-
-export function initUI(loadProjects) {
-  const searchInput = document.getElementById("searchInput");
-  const statusFilter = document.getElementById("statusFilter");
-  const sortBySelect = document.getElementById("sortBy");
-  const clearFiltersBtn = document.getElementById("clearFiltersBtn");
-
-  if (searchInput)
-    searchInput.addEventListener("input", () => applyFiltersAndRender());
-  if (statusFilter)
-    statusFilter.addEventListener("change", () => applyFiltersAndRender());
-  if (sortBySelect)
-    sortBySelect.addEventListener("change", () => applyFiltersAndRender());
-  if (clearFiltersBtn)
-    clearFiltersBtn.addEventListener("click", () => {
-      searchInput.value = "";
-      statusFilter.value = "";
-      sortBySelect.value = "priority-desc";
-      applyFiltersAndRender();
-    });
-
-  // Optional reload button
-  const reloadBtn = document.getElementById("reloadProjectsBtn");
-  if (reloadBtn) reloadBtn.addEventListener("click", loadProjects);
-}
-
-function applyFiltersAndRender() {
-  const searchInput = document.getElementById("searchInput");
-  const statusFilter = document.getElementById("statusFilter");
-  const sortBySelect = document.getElementById("sortBy");
-
-  const q = String(searchInput?.value || "").trim().toLowerCase();
-  const statusSelected = String(statusFilter?.value || "");
-  const sortBy = String(sortBySelect?.value || "priority-desc");
-
-  let view = allProjects.filter((p) => {
-    const name = String(p.Name || "").toLowerCase();
-    const matchesText = q ? name.includes(q) : true;
-    const matchesStatus = statusSelected
-      ? String(p.Status || "") === statusSelected
-      : true;
-    return matchesText && matchesStatus;
-  });
-
-  const statusOrder = { "Not Started": 0, "In Progress": 1, Complete: 2 };
-  view.sort((a, b) => {
-    switch (sortBy) {
-      case "priority-asc":
-        return Number(a.Priority) - Number(b.Priority);
-      case "status":
-        return (
-          (statusOrder[a.Status] ?? 99) - (statusOrder[b.Status] ?? 99) ||
-          String(a.Name || "").localeCompare(String(b.Name || ""))
-        );
-      case "name":
-        return String(a.Name || "").localeCompare(String(b.Name || ""));
-      case "priority-desc":
-      default:
-        return Number(b.Priority) - Number(a.Priority);
-    }
-  });
-
-  renderList(view);
-}
-
 import {
+  fetchProjects,
+  updateProject,
+  deleteProject,
+  clearAllProjects,
   parseSubtasks,
   saveSubtasks,
-  deleteProject
 } from "./projects.js";
 
-export function renderList(projects) {
-  const list = document.getElementById("projectList");
-  if (!list) return;
+// ====== Local state ======
+let allProjects = [];
+
+// ====== Elements ======
+const list = document.getElementById("projectList");
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+const sortBySelect = document.getElementById("sortBy");
+
+// ====== Render project list ======
+function renderList(projects) {
   list.innerHTML = "";
 
   projects.forEach((project) => {
     const rowIndex = project._row ?? allProjects.indexOf(project) + 2;
     const li = document.createElement("li");
+
+    // Style based on status
     const status = String(project.Status || "").trim().toLowerCase();
     const colors = {
       complete: "#d4edda",
@@ -98,6 +37,7 @@ export function renderList(projects) {
     li.style.borderRadius = "4px";
     li.style.listStyle = "none";
 
+    // Priority border color
     const priorityNum = Number(String(project.Priority ?? "").trim());
     let accent = "#6c757d";
     if (priorityNum >= 4) accent = "#dc3545";
@@ -109,7 +49,7 @@ export function renderList(projects) {
 
     const text = document.createElement("span");
     text.className = "item-left";
-    text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status}) `;
+    text.textContent = `${project.Name} (Priority: ${project.Priority}, Status: ${project.Status})`;
 
     const actions = document.createElement("div");
     actions.className = "item-actions";
@@ -119,21 +59,6 @@ export function renderList(projects) {
     editBtn.classList.add("edit-btn");
     editBtn.type = "button";
     editBtn.onclick = () => renderEditForm(li, project, rowIndex);
-    actions.appendChild(editBtn);
-
-      // Save
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "Save";
-    saveBtn.type = "button";
-    saveBtn.onclick = async () => {
-      await updateProject(
-      rowIndex,
-      nameInput.value,
-      priorityInput.value,
-      statusSelect.value
-    );
-    loadProjects();
-    };
 
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
@@ -141,9 +66,10 @@ export function renderList(projects) {
     deleteBtn.type = "button";
     deleteBtn.onclick = async () => {
       await deleteProject(rowIndex);
-      document.getElementById("projectList").innerHTML = "Loading...";
-      setTimeout(() => location.reload(), 250);
+      loadProjects();
     };
+
+    actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
 
     const toggleBtn = document.createElement("button");
@@ -166,124 +92,117 @@ export function renderList(projects) {
     topRow.appendChild(actions);
     li.appendChild(topRow);
 
+    // === Subtasks ===
     let subtasks = parseSubtasks(project.Subtasks);
     const subUL = document.createElement("ul");
     subUL.className = "subtasks";
 
     function renderSubtasks() {
-      subUL.innerHTML = "";
+      try {
+        subUL.innerHTML = "";
+        (Array.isArray(subtasks) ? subtasks : []).forEach((subtask, idx) => {
+          const subLi = document.createElement("li");
+          subLi.className = "subtask-item";
+          subLi.style.display = "flex";
+          subLi.style.alignItems = "center";
 
-      (Array.isArray(subtasks) ? subtasks : []).forEach((subtask, idx) => {
-        const subLi = document.createElement("li");
-        subLi.className = "subtask-item";
-        subLi.style.display = "flex";
-        subLi.style.alignItems = "center";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = !!subtask?.done;
+          cb.style.marginRight = "8px";
 
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !!subtask?.done;
-        cb.style.marginRight = "8px";
+          const label = document.createElement("span");
+          const textVal = typeof subtask === "string" ? subtask : String(subtask?.text ?? "");
+          label.textContent = textVal;
+          if (cb.checked) label.style.textDecoration = "line-through";
 
-        const label = document.createElement("span");
-        const textVal =
-          typeof subtask === "string" ? subtask : String(subtask?.text ?? "");
-        label.textContent = textVal;
-        if (cb.checked) label.style.textDecoration = "line-through";
+          // inline edit
+          label.addEventListener("dblclick", () => {
+            const edit = document.createElement("input");
+            edit.type = "text";
+            edit.value = textVal;
+            edit.style.flex = "1";
+            subLi.replaceChild(edit, label);
+            edit.focus();
+            edit.select();
 
-        label.addEventListener("dblclick", () => {
-          const edit = document.createElement("input");
-          edit.type = "text";
-          edit.value = textVal;
-          edit.autocomplete = "off";
-          edit.name = `edit-subtask-${rowIndex}-${idx}`;
-          edit.style.flex = "1";
-          subLi.replaceChild(edit, label);
-          edit.focus();
-          edit.select();
+            const save = async () => {
+              const v = edit.value.trim();
+              subtasks[idx] = { text: v || textVal, done: cb.checked };
+              await saveSubtasks(rowIndex, subtasks);
+              renderSubtasks();
+            };
+            const cancel = () => renderSubtasks();
 
-          const save = async () => {
-            const v = edit.value.trim();
-            subtasks[idx] = { text: v || textVal, done: cb.checked };
+            edit.addEventListener("keydown", (e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") cancel();
+            });
+            edit.addEventListener("blur", save);
+          });
+
+          cb.onchange = async () => {
+            const txt = typeof subtask === "string" ? subtask : String(subtask?.text ?? "");
+            subtasks[idx] = { text: txt, done: cb.checked };
+            await saveSubtasks(rowIndex, subtasks);
+            label.style.textDecoration = cb.checked ? "line-through" : "none";
+          };
+
+          const del = document.createElement("button");
+          del.type = "button";
+          del.textContent = "✕";
+          del.className = "toggle-btn";
+          del.style.marginLeft = "8px";
+          del.onclick = async () => {
+            subtasks.splice(idx, 1);
             await saveSubtasks(rowIndex, subtasks);
             renderSubtasks();
           };
-          const cancel = () => renderSubtasks();
 
-          edit.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") cancel();
-          });
-          edit.addEventListener("blur", save);
+          subLi.appendChild(cb);
+          subLi.appendChild(label);
+          subLi.appendChild(del);
+          subUL.appendChild(subLi);
         });
 
-        cb.onchange = async () => {
-          const txt =
-            typeof subtask === "string"
-              ? subtask
-              : String(subtask?.text ?? "");
-          subtasks[idx] = { text: txt, done: cb.checked };
-          await saveSubtasks(rowIndex, subtasks);
-          label.style.textDecoration = cb.checked ? "line-through" : "none";
-        };
+        // add-subtask row
+        const addRow = document.createElement("li");
+        addRow.className = "subtask-add";
+        addRow.style.display = "flex";
+        addRow.style.gap = "6px";
+        addRow.style.marginTop = "6px";
 
-        const del = document.createElement("button");
-        del.type = "button";
-        del.textContent = "✕";
-        del.title = "Delete subtask";
-        del.className = "toggle-btn";
-        del.style.padding = "2px 8px";
-        del.style.marginLeft = "8px";
-        del.onclick = async () => {
-          subtasks.splice(idx, 1);
+        const addInput = document.createElement("input");
+        addInput.type = "text";
+        addInput.placeholder = "New subtask…";
+        addInput.name = `new-subtask-${rowIndex}`;
+        addInput.style.flex = "1";
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.textContent = "Add";
+        addBtn.className = "edit-btn";
+
+        const add = async () => {
+          const val = addInput.value.trim();
+          if (!val) return;
+          subtasks.push({ text: val, done: false });
+          addInput.value = "";
           await saveSubtasks(rowIndex, subtasks);
           renderSubtasks();
         };
 
-        subLi.appendChild(cb);
-        subLi.appendChild(label);
-        subLi.appendChild(del);
-        subUL.appendChild(subLi);
-      });
+        addBtn.onclick = add;
+        addInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") add();
+        });
 
-      const addRow = document.createElement("li");
-      addRow.className = "subtask-add";
-      addRow.style.display = "flex";
-      addRow.style.alignItems = "center";
-      addRow.style.gap = "6px";
-      addRow.style.marginTop = "6px";
-
-      const addInput = document.createElement("input");
-      addInput.type = "text";
-      addInput.placeholder = "New subtask…";
-      addInput.autocomplete = "off";
-      addInput.name = `new-subtask-${rowIndex}`;
-      addInput.style.flex = "1";
-      addInput.style.padding = "6px 8px";
-      addInput.style.border = "1px solid #e5e7eb";
-      addInput.style.borderRadius = "8px";
-
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.textContent = "Add";
-      addBtn.className = "edit-btn";
-
-      const add = async () => {
-        const val = addInput.value.trim();
-        if (!val) return;
-        subtasks.push({ text: val, done: false });
-        addInput.value = "";
-        await saveSubtasks(rowIndex, subtasks);
-        renderSubtasks();
-      };
-
-      addBtn.onclick = add;
-      addInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") add();
-      });
-
-      addRow.appendChild(addInput);
-      addRow.appendChild(addBtn);
-      subUL.appendChild(addRow);
+        addRow.appendChild(addInput);
+        addRow.appendChild(addBtn);
+        subUL.appendChild(addRow);
+      } catch (e) {
+        console.error("[subtasks] render error", e);
+      }
     }
 
     renderSubtasks();
@@ -301,3 +220,118 @@ export function renderList(projects) {
     list.appendChild(li);
   });
 }
+
+// ====== Filter, sort, render ======
+function applyFiltersAndRender() {
+  const q = String(searchInput?.value || "").trim().toLowerCase();
+  const statusSelected = String(statusFilter?.value || "");
+  const sortBy = String(sortBySelect?.value || "priority-desc");
+
+  const statusOrder = { "Not Started": 0, "In Progress": 1, Complete: 2 };
+
+  let view = allProjects.filter((p) => {
+    const name = String(p.Name || "").toLowerCase();
+    const matchesText = q ? name.includes(q) : true;
+    const matchesStatus = statusSelected ? String(p.Status || "") === statusSelected : true;
+    return matchesText && matchesStatus;
+  });
+
+  view.sort((a, b) => {
+    switch (sortBy) {
+      case "priority-asc":
+        return Number(a.Priority) - Number(b.Priority);
+      case "status":
+        return (statusOrder[a.Status] ?? 99) - (statusOrder[b.Status] ?? 99);
+      case "name":
+        return String(a.Name || "").localeCompare(String(b.Name || ""));
+      case "priority-desc":
+      default:
+        return Number(b.Priority) - Number(a.Priority);
+    }
+  });
+
+  renderList(view);
+}
+
+// ====== Save state ======
+function setProjects(projects) {
+  allProjects = projects;
+  applyFiltersAndRender();
+}
+
+// ====== Initialize event listeners ======
+function initUI(triggerReload) {
+  document.getElementById("clearFiltersBtn")?.addEventListener("click", () => {
+    searchInput.value = "";
+    statusFilter.value = "";
+    sortBySelect.value = "priority-desc";
+    applyFiltersAndRender();
+  });
+
+  [searchInput, statusFilter, sortBySelect].forEach((el) => {
+    el?.addEventListener("input", applyFiltersAndRender);
+  });
+
+  document.getElementById("clearAllBtn")?.addEventListener("click", async () => {
+    await clearAllProjects();
+    triggerReload();
+  });
+}
+
+// ====== Fetch and display projects ======
+async function loadProjects() {
+  try {
+    const projects = await fetchProjects();
+    setProjects(projects);
+  } catch (err) {
+    console.error("[load] fetch failed:", err);
+    document.getElementById("projectList").innerHTML = "<li>Error loading projects.</li>";
+  }
+}
+
+// ====== Inline edit form ======
+function renderEditForm(li, project, rowIndex) {
+  li.innerHTML = "";
+
+  const nameInput = document.createElement("input");
+  nameInput.type = "text";
+  nameInput.value = project.Name;
+
+  const priorityInput = document.createElement("input");
+  priorityInput.type = "number";
+  priorityInput.value = project.Priority;
+  priorityInput.min = 1;
+  priorityInput.max = 5;
+
+  const statusSelect = document.createElement("select");
+  ["Not Started", "In Progress", "Complete"].forEach((status) => {
+    const opt = document.createElement("option");
+    opt.value = status;
+    opt.textContent = status;
+    if (status === project.Status) opt.selected = true;
+    statusSelect.appendChild(opt);
+  });
+
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Save";
+  saveBtn.type = "button";
+  saveBtn.onclick = async () => {
+    await updateProject(rowIndex, nameInput.value, priorityInput.value, statusSelect.value);
+    loadProjects();
+  };
+
+  li.appendChild(nameInput);
+  li.appendChild(priorityInput);
+  li.appendChild(statusSelect);
+  li.appendChild(saveBtn);
+}
+
+// ====== Exports ======
+export {
+  renderList,
+  applyFiltersAndRender,
+  initUI,
+  setProjects,
+  renderEditForm,
+  loadProjects
+};
