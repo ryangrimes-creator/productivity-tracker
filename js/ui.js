@@ -1,5 +1,5 @@
 // ui.js
-import { renderEditForm } from "./main.js";
+import renderEditForm from './main.js';
 
 let allProjects = [];
 
