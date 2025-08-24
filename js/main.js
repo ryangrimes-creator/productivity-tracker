@@ -167,6 +167,7 @@ form.addEventListener("submit", async (e) => {
     console.error("Failed to add project:", err);
   }
 });
+  export default renderEditForm;
 
 // ===== Clear all projects =====
 
